@@ -1,15 +1,15 @@
 {
- "generated_at": "2026-09-17T14:35:02-04:00",
- "generated_local": "2026-09-17T18:35:02",
+ "generated_at": "2026-09-17T14:40:03-04:00",
+ "generated_local": "2026-09-17T18:40:04",
  "env": "virtual",
  "regime": "side",
  "bot": {
   "stake": 4000.0,
-  "equity": 4050.97,
+  "equity": 4052.09,
   "cash": 2800.0,
-  "pct": 1.274,
+  "pct": 1.302,
   "realized": 0,
-  "unrealized": 50.97,
+  "unrealized": 52.09,
   "fees_paid": 3.0,
   "closed_trades": 0,
   "books": {
@@ -21,7 +21,7 @@
     "slots": 2
    },
    "C": {
-    "equity": 1250.97,
+    "equity": 1252.09,
     "cash": 0.0,
     "alloc": 1200.0,
     "open": 3,
@@ -39,15 +39,15 @@
     "position_id": 3600156666,
     "opened": "2026-09-16",
     "entry": 408.05,
-    "now": 422.79,
+    "now": 422.36,
     "units": 0.980175,
     "amount": 399.96,
-    "pnl": 14.45,
-    "pct": 3.612,
+    "pnl": 14.03,
+    "pct": 3.507,
     "sessions_held": 1,
     "time_stop": 10,
     "stop_price": 387.6475,
-    "stop_distance_pct": 9.07
+    "stop_distance_pct": 8.95
    },
    {
     "symbol": "MRNA",
@@ -55,15 +55,15 @@
     "position_id": 3600156663,
     "opened": "2026-09-16",
     "entry": 143.0,
-    "now": 158.77,
+    "now": 159.34,
     "units": 2.777777,
     "amount": 397.22,
-    "pnl": 43.81,
-    "pct": 11.028,
+    "pnl": 45.39,
+    "pct": 11.427,
     "sessions_held": 1,
     "time_stop": 10,
     "stop_price": 135.85,
-    "stop_distance_pct": 16.87
+    "stop_distance_pct": 17.29
    },
    {
     "symbol": "VEEV",
@@ -71,40 +71,40 @@
     "position_id": 3600156664,
     "opened": "2026-09-16",
     "entry": 268.0,
-    "now": 265.02,
+    "now": 264.99,
     "units": 1.492481,
     "amount": 399.98,
-    "pnl": -4.45,
-    "pct": -1.112,
+    "pnl": -4.49,
+    "pct": -1.123,
     "sessions_held": 1,
     "time_stop": 10,
     "stop_price": 254.6,
-    "stop_distance_pct": 4.09
+    "stop_distance_pct": 4.08
    }
   ]
  },
  "rest": {
-  "value": 95936.96,
+  "value": 95933.63,
   "cash": 94124.3,
-  "positions_value": 1812.66,
+  "positions_value": 1809.33,
   "positions": [
    {
     "symbol": "BTC",
     "position_id": 2297071823,
     "opened": "2022-06-24",
     "entry": 21112.96,
-    "now": 76541.35,
+    "now": 76401.0,
     "units": 0.023682,
     "amount": 500.0,
-    "value": 1812.66,
-    "pnl": 1312.66,
-    "pct": 262.532,
+    "value": 1809.33,
+    "pnl": 1309.33,
+    "pct": 261.866,
     "legacy": true
    }
   ]
  },
  "total": {
-  "value": 99987.93,
+  "value": 99985.72,
   "cash": 96924.3
  }
 }
