@@ -8,8 +8,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Two Books">
-<title>Two Books</title>
+<meta name="apple-mobile-web-app-title" content="Dashboardia">
+<title>Dashboardia</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='20' fill='%23F2A93B'/%3E%3Crect x='20' y='18' width='9' height='28' rx='2' fill='%230C0D0F'/%3E%3Crect x='35' y='18' width='9' height='28' rx='2' fill='%230C0D0F'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,15 +24,19 @@
   --amber:#F2A93B; --amber-l:#F7C46A; --amber-d:#E89A2C;
   --amber-08:rgba(242,169,59,.08); --amber-10:rgba(242,169,59,.10); --amber-16:rgba(242,169,59,.16);
   --dip:#6FB3D2; --mom:#C9A0DC; --dip-10:rgba(111,179,210,.10); --mom-10:rgba(201,160,220,.10);
-  --line:#6FB3D2; --area:rgba(111,179,210,.14); --glow:rgba(111,179,210,.30);
+  --teal:#7CC5B0; --silver:#C9CDD3;
+  --line:var(--dip); --area:rgba(111,179,210,.14); --glow:rgba(111,179,210,.30);
   --up:#4ADE80; --down:#F07A7A; --up-10:rgba(74,222,128,.10); --down-10:rgba(240,122,122,.10);
-  --paper:#F5F1E6; --paper-ink:#1A1712; --paper-ink2:#5C554A;
+  --sheet:#1A1814; --sheet-hair:rgba(242,169,59,.14);
   --sans:"Figtree","Nunito Sans","Segoe UI",Helvetica,Arial,sans-serif;
   --mono:"Courier Prime","Courier New",Courier,monospace;
   --gutter:max(16px,env(safe-area-inset-left,0px));
   --gutter-r:max(16px,env(safe-area-inset-right,0px));
   --nav-h:60px;
 }
+/* each tab draws its curve in its own hue, so the eye knows where it is */
+body[data-tab="rest"]{--line:var(--teal);--area:rgba(124,197,176,.14);--glow:rgba(124,197,176,.30)}
+body[data-tab="total"]{--line:var(--silver);--area:rgba(201,205,211,.12);--glow:rgba(201,205,211,.22)}
 *{box-sizing:border-box}
 html{background:var(--ground);-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{margin:0;background:var(--ground);color:var(--t1);font-family:var(--sans);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
@@ -71,7 +75,7 @@ button{font-family:inherit;touch-action:manipulation}
 /* content */
 .app{padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))}
 .err{display:none;margin:12px 0 0;padding:12px 14px;border-radius:10px;background:var(--down-10);color:var(--down);font-family:var(--mono);font-size:12.5px;border:1px solid var(--hair)}
-.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px 20px;flex-wrap:wrap;padding:22px 0 8px}
+.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px 20px;flex-wrap:wrap;padding:22px 0 10px}
 .hero>div:first-child{min-width:0}
 .val{font-weight:800;font-size:clamp(38px,9vw,64px);letter-spacing:-.04em;line-height:.95;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .sub{font-family:var(--mono);font-size:12px;color:var(--t3);margin-top:8px;letter-spacing:.02em}
@@ -83,10 +87,12 @@ button{font-family:inherit;touch-action:manipulation}
 .regime{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);padding:8px 12px;border-radius:9px;border:1px solid var(--hair);background:var(--tint2);display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
 .regime .dot{background:var(--t4)} .regime.up .dot{background:var(--up)} .regime.down .dot{background:var(--down)}
 
-.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding:12px 0}
-.grid>*{min-width:0}
-.stack{display:grid;gap:12px;align-content:start}
-@media (min-width:820px){.grid.two{grid-template-columns:minmax(0,1fr) 340px}}
+/* the page is one vertical stack; one row of it splits in two on wide screens */
+.page{display:grid;gap:12px;padding:8px 0 0}
+.page>*{min-width:0}
+.two{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+.two>*{min-width:0}
+@media (min-width:820px){.two{grid-template-columns:minmax(0,1fr) 340px}}
 .card{background:var(--panel);border:1px solid var(--hair);border-radius:12px;padding:16px;min-width:0}
 .card-h{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
 .card-h>div:first-child{min-width:0}
@@ -101,7 +107,7 @@ button{font-family:inherit;touch-action:manipulation}
 .tile .bar{margin-top:3px}
 .bar{height:4px;background:var(--tint4);border-radius:999px;overflow:hidden}
 .bar i{display:block;height:100%;border-radius:999px;background:var(--amber);min-width:0}
-.bar.dip i{background:var(--dip)} .bar.mom i{background:var(--mom)} .bar.dim i{background:var(--t4)}
+.bar.dip i{background:var(--dip)} .bar.mom i{background:var(--mom)}
 .bar.split{display:flex;gap:2px} .bar.split i{border-radius:2px}
 
 /* chart card */
@@ -150,22 +156,27 @@ tr:last-child td{border-bottom:0}
 .row .f{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--t4)}
 .row .f .warn{color:var(--amber)}
 
-/* the one bright object */
-.sheet{background:var(--paper);color:var(--paper-ink);border-radius:0;padding:18px 20px;font-family:var(--mono);font-size:13px;line-height:1.5}
-.sheet .h{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--paper-ink2);margin-bottom:10px;display:flex;justify-content:space-between;gap:12px}
-.sheet dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:5px 16px}
-.sheet dt{color:var(--paper-ink2)} .sheet dd{margin:0;font-weight:700}
-.sheet .line{border-top:1px solid rgba(26,23,18,.15);margin:10px 0}
-.sheet .ev{display:grid;grid-template-columns:auto 1fr;gap:4px 14px}
-.sheet .ev .done{color:var(--paper-ink2);text-decoration:line-through}
-.sheet .ev .next{font-weight:700}
-.sheet .foot{font-size:11px;color:var(--paper-ink2)}
+/* the sheet: the one warm object on the page. dark now, so it no longer glares */
+.sheet{background:radial-gradient(120% 90% at 100% 0%,var(--amber-08),transparent 55%),var(--sheet);border:1px solid var(--sheet-hair);border-radius:12px;padding:18px 20px;font-family:var(--mono);font-size:13px;line-height:1.5;color:var(--t2);align-self:start}
+.sheet .h{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin-bottom:12px;display:flex;justify-content:space-between;gap:12px}
+.sheet .h span:last-child{color:var(--t4)}
+.sheet dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 16px}
+.sheet dt{color:var(--t4)} .sheet dd{margin:0;font-weight:700;color:var(--t1);font-variant-numeric:tabular-nums}
+.sheet dd.pos{color:var(--up)} .sheet dd.neg{color:var(--down)}
+.sheet .line{border-top:1px solid var(--sheet-hair);margin:12px 0}
+.sheet .ev{display:grid;grid-template-columns:auto 1fr;gap:5px 14px}
+.sheet .ev .done{color:var(--t5);text-decoration:line-through}
+.sheet .ev .next{color:var(--amber);font-weight:700;position:relative}
+.sheet .ev .next.t::before{content:"";position:absolute;left:-12px;top:.55em;width:6px;height:6px;border-radius:50%;background:var(--amber);animation:pulse 2.4s ease-in-out infinite}
+.sheet .ev{padding-left:12px}
+.sheet .foot{font-size:11px;color:var(--t4);line-height:1.5}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@media (prefers-reduced-motion:reduce){.sheet .ev .next.t::before{animation:none}}
 
 @media (hover:hover){
   .tabs button:not([aria-selected="true"]):hover{color:var(--t2)}
   .seg button:not([aria-pressed="true"]):hover{color:var(--t2)}
 }
-@media (max-width:819px){.sheet{border-radius:12px}}
 
 /* phones */
 @media (max-width:640px){
@@ -197,7 +208,7 @@ tr:last-child td{border-bottom:0}
 <body>
 <header class="rail">
   <div class="wrap">
-    <div class="brand"><div class="mark" aria-hidden="true"></div><h1>Two Books</h1></div>
+    <div class="brand"><div class="mark" aria-hidden="true"></div><h1>Dashboardia</h1></div>
     <div class="stamp" id="stamp"><span class="dot warn"></span>loading…</div>
   </div>
 </header>
@@ -223,14 +234,15 @@ const fmtP=v=>{const s=v.toFixed(2); return (s==='0.00'||s==='-0.00')?'0.00%':(v
 const cls=v=>v>0.005?'pos':v<-0.005?'neg':'';
 const dir=v=>v>0.005?'up':v<-0.005?'down':'flat';
 const dmy=s=>new Date(s+(s.length===10?'T12:00:00':'')).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}).toUpperCase();
+const dmyhm=d=>d.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).replace(',','').toUpperCase();
 const ARROW='<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 2 9 8H1z" fill="currentColor"/></svg>';
 const ARROW_DN='<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 8 1 2h8z" fill="currentColor"/></svg>';
 const NS='http://www.w3.org/2000/svg';
 const el=(n,a,t)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(t!=null)e.textContent=t;return e};
-const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const css=v=>getComputedStyle(document.body).getPropertyValue(v).trim();
 const JOBS=[['08:30','Morning check'],['09:31','Opening prices'],['09:44','Momentum buying'],['10:14','Dip buying'],['14:00','Dip selling'],['15:54','Momentum selling'],['16:30','End of day']];
-let latest=null, hist=null, tab='bot', range='1W';
-try{tab=localStorage.getItem('tb.tab')||tab;range=localStorage.getItem('tb.range')||range}catch(e){}
+let latest=null, hist=null, tab='bot', range='ALL';
+try{tab=localStorage.getItem('db.tab')||tab;range=localStorage.getItem('db.range')||range}catch(e){}
 
 async function load(){
   const q='?ts='+Date.now();
@@ -272,7 +284,7 @@ function series(){
 // Scrubbing writes into the readout row above the plot rather than a floating
 // tooltip, which a thumb would cover.
 function chart(pts,W,onPoint){
-  const narrow=W<480, H=narrow?190:250, R=12, T=14, B=26;
+  const narrow=W<480, H=narrow?210:300, R=12, T=14, B=26;
   const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':'Value over time',class:'plot'});
   if(pts.length<2){
     svg.appendChild(el('text',{x:W/2,y:H/2-6,'text-anchor':'middle'},'NOT ENOUGH HISTORY YET'));
@@ -294,8 +306,9 @@ function chart(pts,W,onPoint){
   defs.appendChild(g); svg.appendChild(defs);
   for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4; svg.appendChild(el('line',{x1:L,x2:W-R,y1:y(v),y2:y(v),stroke:css('--hair2'),'stroke-width':1}));
     svg.appendChild(el('text',{x:L-8,y:y(v)+4,'text-anchor':'end'},ylabs[i]))}
-  const xt=Math.min(narrow?3:5,pts.length-1); for(let i=0;i<=xt;i++){const t=t0+(t1-t0)*i/xt; const d=new Date(t);
-    const lab=(t1-t0)>2*864e5?d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}).toUpperCase():d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  const span=t1-t0, xt=Math.min(narrow?3:5,pts.length-1);
+  for(let i=0;i<=xt;i++){const t=t0+span*i/xt; const d=new Date(t);
+    const lab=span>2*864e5?d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}).toUpperCase():d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     svg.appendChild(el('text',{x:x(t),y:H-8,'text-anchor':i===0?'start':i===xt?'end':'middle'},lab))}
   const base=pts[0].v; svg.appendChild(el('line',{x1:L,x2:W-R,y1:y(base),y2:y(base),stroke:css('--t4'),'stroke-width':1,'stroke-dasharray':'3 4'}));
   const d='M'+pts.map(p=>x(p.t.getTime()).toFixed(1)+','+y(p.v).toFixed(1)).join(' L');
@@ -318,8 +331,7 @@ function chart(pts,W,onPoint){
 function readout(p){
   const ro=$('#readout'); if(!ro||!latest) return;
   const pts=series(); const last=pts[pts.length-1]; const q=p||last; if(!q) return;
-  const when=q.t.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).toUpperCase().replace(',','');
-  ro.querySelector('.l').textContent=(p?'':'LATEST · ')+when;
+  ro.querySelector('.l').textContent=(p?'':'LATEST · ')+dmyhm(q.t);
   ro.querySelector('.v').textContent=fmt$(q.v);
   const pe=ro.querySelector('.p'); pe.textContent=fmtP(q.p); pe.className='p '+cls(q.p);
   ro.querySelector('.d').textContent=p?'':(tab==='bot'?'vs stake':'vs first snapshot');
@@ -341,9 +353,9 @@ function watchChart(){
 
 // [label, value, class, context line, {pct, kind}]
 function tiles(items){return '<div class="tiles">'+items.map(([k,v,c,s,m])=>`<div class="tile"><div class="caps">${k}</div><div class="v ${c||''}">${v}</div>${s?`<div class="c">${s}</div>`:''}${m?`<div class="bar ${m.kind||''}"><i style="width:${Math.max(0,Math.min(100,m.pct))}%"></i></div>`:''}</div>`).join('')+'</div>'}
-function split(parts){ // [[label, value, share, kind]]
-  return `<div class="bar split" aria-hidden="true">${parts.map(p=>`<i class="${p[3]}" style="flex:${Math.max(p[2],0.4)} 0 0;background:var(--${p[3]})"></i>`).join('')}</div>
-  <div class="legend" style="padding-top:10px">${parts.map(p=>`<span><i class="now" style="background:var(--${p[3]})"></i>${p[0]} ${p[2].toFixed(1)}%</span>`).join('')}</div>`;
+function split(parts){ // [[label, share, colour var]]
+  return `<div class="bar split" aria-hidden="true">${parts.map(p=>`<i style="flex:${Math.max(p[1],0.4)} 0 0;background:var(--${p[2]})"></i>`).join('')}</div>
+  <div class="legend" style="padding-top:10px">${parts.map(p=>`<span><i class="now" style="background:var(--${p[2]})"></i>${p[0]} ${p[1].toFixed(1)}%</span>`).join('')}</div>`;
 }
 function chartCard(title,subtitle){
   const ranges=['1D','1W','1M','ALL'].map(k=>`<button aria-pressed="${k===range}" data-r="${k}">${k}</button>`).join('');
@@ -352,17 +364,27 @@ function chartCard(title,subtitle){
   <div class="legend"><span><i></i>value</span><span><i class="base"></i>start of range</span><span><i class="now"></i>latest</span></div></div>`;
 }
 
-function sheet(){
+// The bot's day in New York time: what has run, what is next.
+function daySheet(){
   const b=latest.bot, now=etNow(); const hm=now.getUTCHours()*60+now.getUTCMinutes();
   const rg={up:'RISING',side:'FLAT',down:'FALLING'}[latest.regime]||'—';
   const bk=b.books;
-  const ev=JOBS.map(([t,n])=>{const m=parseInt(t.slice(0,2))*60+parseInt(t.slice(3)); const done=m<hm; return `<span class="${done?'done':''}">${t}</span><span class="${done?'done':''}">${n}</span>`}).join('');
   const nextIdx=JOBS.findIndex(([t])=>parseInt(t.slice(0,2))*60+parseInt(t.slice(3))>=hm);
-  return `<div class="sheet"><div class="h"><span>DAY SHEET</span><span>${new Date(latest.generated_at).toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'}).toUpperCase()}</span></div>
+  const ev=JOBS.map(([t,n],i)=>{const m=parseInt(t.slice(0,2))*60+parseInt(t.slice(3)); const k=m<hm?'done':i===nextIdx?'next':''; return `<span class="${k} t">${t}</span><span class="${k}">${n}</span>`}).join('');
+  const clock=String(now.getUTCHours()).padStart(2,'0')+':'+String(now.getUTCMinutes()).padStart(2,'0');
+  return `<div class="sheet"><div class="h"><span>Day sheet</span><span>${new Date(latest.generated_at).toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'}).toUpperCase()}</span></div>
   <dl><dt>Market</dt><dd>${rg}</dd><dt>Dip book</dt><dd>${bk.B.open}/${bk.B.slots} slots · ${latest.regime==='up'?'may buy':'stands down'}</dd><dt>Momentum</dt><dd>${bk.C.open}/${bk.C.slots} slots · ${latest.regime==='down'?'holds cash':bk.C.open>=bk.C.slots?'full':'may buy'}</dd>
   <dt>Breaker</dt><dd>${b.breaker.paused_sessions?'PAUSED · '+b.breaker.paused_sessions+' days':'armed'}</dd></dl>
   <div class="line"></div><div class="ev">${ev}</div>
-  <div class="line"></div><div class="foot">NEW YORK TIME · ${nextIdx<0?'session complete':'next: '+JOBS[nextIdx][0]+' '+JOBS[nextIdx][1]}</div></div>`;
+  <div class="line"></div><div class="foot">NEW YORK ${clock} · ${nextIdx<0?'session complete':'next: '+JOBS[nextIdx][1].toLowerCase()}</div></div>`;
+}
+// What the Rest and Total deltas are measured from.
+function baseSheet(value,p0,foot){
+  const m=hist&&hist.meta, rows=(hist&&hist.rows)||[], d=value-p0;
+  return `<div class="sheet"><div class="h"><span>Baseline</span><span>${m?'SINCE '+dmy(m.started):''}</span></div>
+  <dl><dt>First snapshot</dt><dd>${m?dmyhm(new Date(m.started)):'—'}</dd><dt>Started at</dt><dd>${fmt$(p0)}</dd><dt>Now</dt><dd>${fmt$(value)}</dd><dt>Change</dt><dd class="${cls(d)}">${fmt$(d)} · ${fmtP(p0?d/p0*100:0)}</dd></dl>
+  <div class="line"></div><dl><dt>Snapshots</dt><dd>${rows.length}</dd><dt>Account</dt><dd>${latest.env||'—'}</dd></dl>
+  <div class="line"></div><div class="foot">${foot}</div></div>`;
 }
 
 function botPositions(ps){
@@ -395,9 +417,11 @@ function hero(value,sub,d,pct,extra){
   return `<div class="hero"><div><div class="val">${fmt$(value)}</div><div class="sub">${sub}</div></div>
   <div class="chips">${extra||''}<div class="delta ${k}">${k==='down'?ARROW_DN:ARROW}<span>${fmt$(d)} · ${fmtP(pct)}</span></div></div></div>`;
 }
+const card=(title,subtitle,inner,badge)=>`<div class="card"><div class="card-h"><div><h2 class="title">${title}</h2><p class="subtitle">${subtitle}</p></div>${badge?`<span class="badge">${badge}</span>`:''}</div>${inner}</div>`;
 
+// Every tab has the same shape: hero, chart, [tiles | sheet], then a list if it has one.
 function render(){
-  stamp();
+  stamp(); document.body.dataset.tab=tab;
   const b=latest.bot, r=latest.rest, t=latest.total;
   const since=hist&&hist.meta?dmy(hist.meta.started):'START';
   let head='', body='';
@@ -405,41 +429,41 @@ function render(){
     const d=b.equity-b.stake, bk=b.books;
     const rg={up:'rising',side:'flat',down:'falling'}[latest.regime]||'—';
     head=hero(b.equity,`STAKE ${fmt$(b.stake)} · CASH ${fmt$(b.cash)}`,d,b.pct,`<div class="regime ${latest.regime==='up'?'up':latest.regime==='down'?'down':''}"><span class="dot"></span>Market ${rg}</div>`);
-    const books=`<div class="card"><div class="card-h"><div><h2 class="title">The two books</h2><p class="subtitle">Each book has its own slots and its own rules.</p></div></div>
-      ${tiles([
+    const books=card('The two books','Each book has its own slots and its own rules.',tiles([
         ['Dip book',fmt$(bk.B.equity),'',`${bk.B.open} of ${bk.B.slots} slots · ${fmt$(bk.B.cash)} cash`,{pct:bk.B.open/bk.B.slots*100,kind:'dip'}],
         ['Momentum book',fmt$(bk.C.equity),'',`${bk.C.open} of ${bk.C.slots} slots · ${fmt$(bk.C.cash)} cash`,{pct:bk.C.open/bk.C.slots*100,kind:'mom'}],
         ['Realised',fmt$(b.realized),cls(b.realized),`${b.closed_trades} closed trade${b.closed_trades===1?'':'s'}`],
         ['Unrealised',fmt$(b.unrealized),cls(b.unrealized),`${b.positions.length} open position${b.positions.length===1?'':'s'}`],
         ['Commission',fmt$(b.fees_paid),'','paid so far'],
         ['Breaker',b.breaker.paused_sessions?'PAUSED':'armed',b.breaker.paused_sessions?'neg':'',b.breaker.paused_sessions?`${b.breaker.paused_sessions} session${b.breaker.paused_sessions===1?'':'s'} to go`:'no pause in force']
-      ])}</div>`;
-    body=`<div class="grid two"><div class="stack">${chartCard('Bot equity',`What the bot's money is worth, against the ${fmt$(b.stake)} stake.`)}${books}</div>${sheet()}</div>
-    <div class="grid"><div class="card"><div class="card-h"><div><h2 class="title">Open positions</h2><p class="subtitle">Live marks from eToro.</p></div><span class="badge">${b.positions.length} open</span></div>${botPositions(b.positions)}</div></div>`;
+      ]));
+    body=`<div class="page">${chartCard('Bot equity',`What the bot's money is worth, against the ${fmt$(b.stake)} stake.`)}
+      <div class="two">${books}${daySheet()}</div>
+      ${card('Open positions','Live marks from eToro.',botPositions(b.positions),b.positions.length+' open')}</div>`;
   } else if(tab==='rest'){
     const p0=(hist&&hist.meta&&hist.meta.rest0)||r.value, d=r.value-p0;
     head=hero(r.value,`EVERYTHING THAT IS NOT THE BOT'S · SINCE ${since}`,d,p0?d/p0*100:0);
     const ps=r.value?r.positions_value/r.value*100:0;
-    body=`<div class="grid">${chartCard('Rest of portfolio','Measured from the first snapshot, not from a purchase price.')}
-      <div class="card"><div class="card-h"><div><h2 class="title">Where it sits</h2><p class="subtitle">Cash dominates, so this view moves only when the holdings do — or when money is added or withdrawn.</p></div></div>
-      ${tiles([['Positions',fmt$(r.positions_value),'',`${r.positions.length} holding${r.positions.length===1?'':'s'}`],['Cash',fmt$(r.cash),'','not used by the bot']])}
-      <div style="margin-top:12px">${split([['Positions',r.positions_value,ps,'dip'],['Cash',r.cash,100-ps,'t5']])}</div></div>
-      <div class="card"><div class="card-h"><div><h2 class="title">Holdings</h2><p class="subtitle">Positions the bot does not manage.</p></div><span class="badge">${r.positions.length} held</span></div>${restHoldings(r)}</div></div>`;
+    const sits=card('Where it sits','Cash dominates, so this view moves only when the holdings do — or when money is added or withdrawn.',
+      tiles([['Positions',fmt$(r.positions_value),'',`${r.positions.length} holding${r.positions.length===1?'':'s'}`],['Cash',fmt$(r.cash),'','not used by the bot']])+`<div style="margin-top:12px">${split([['Positions',ps,'teal'],['Cash',100-ps,'t5']])}</div>`);
+    body=`<div class="page">${chartCard('Rest of portfolio','Measured from the first snapshot, not from a purchase price.')}
+      <div class="two">${sits}${baseSheet(r.value,p0,'Measured from the first snapshot, not from a purchase price. A deposit or withdrawal shows up as a step, because this tab charts an account, not a return.')}</div>
+      ${card('Holdings','Positions the bot does not manage.',restHoldings(r),r.positions.length+' held')}</div>`;
   } else {
     const p0=(hist&&hist.meta&&hist.meta.total0)||t.value, d=t.value-p0;
     head=hero(t.value,`WHOLE ACCOUNT · CASH ${fmt$(t.cash)} · SINCE ${since}`,d,p0?d/p0*100:0);
     const bs=t.value?b.equity/t.value*100:0;
-    body=`<div class="grid">${chartCard('Whole account','Bot and rest together, measured from the first snapshot.')}
-      <div class="card"><div class="card-h"><div><h2 class="title">Composition</h2><p class="subtitle">The bot is about ${bs.toFixed(0)}% of the account — which is why every tab has its own scale. On one axis the bot would be a flat line on the floor.</p></div></div>
-      ${tiles([['Bot',fmt$(b.equity),cls(b.pct),`${fmtP(b.pct)} vs stake`],['Rest',fmt$(r.value),'',`${fmt$(r.positions_value)} in positions`]])}
-      <div style="margin-top:12px">${split([['Bot',b.equity,bs,'amber'],['Rest',r.value,100-bs,'t5']])}</div></div></div>`;
+    const comp=card('Composition',`The bot is about ${bs.toFixed(0)}% of the account — which is why every tab has its own scale. On one axis the bot would be a flat line on the floor.`,
+      tiles([['Bot',fmt$(b.equity),cls(b.pct),`${fmtP(b.pct)} vs stake`],['Rest',fmt$(r.value),'',`${fmt$(r.positions_value)} in positions`]])+`<div style="margin-top:12px">${split([['Bot',bs,'amber'],['Rest',100-bs,'teal']])}</div>`);
+    body=`<div class="page">${chartCard('Whole account','Bot and rest together, measured from the first snapshot.')}
+      <div class="two">${comp}${baseSheet(t.value,p0,'Bot and rest together. The bot\'s own gain is measured against its stake on the BOT tab; here everything is measured from the first snapshot.')}</div></div>`;
   }
   $('#view').innerHTML=head+body;
   drawChart(); watchChart();
-  document.querySelectorAll('.seg button').forEach(bt=>bt.addEventListener('click',()=>{range=bt.dataset.r;try{localStorage.setItem('tb.range',range)}catch(e){};render()}));
+  document.querySelectorAll('.seg button').forEach(bt=>bt.addEventListener('click',()=>{range=bt.dataset.r;try{localStorage.setItem('db.range',range)}catch(e){};render()}));
 }
 
-document.querySelectorAll('#tabs button').forEach(bt=>bt.addEventListener('click',()=>{tab=bt.dataset.tab;try{localStorage.setItem('tb.tab',tab)}catch(e){};
+document.querySelectorAll('#tabs button').forEach(bt=>bt.addEventListener('click',()=>{tab=bt.dataset.tab;try{localStorage.setItem('db.tab',tab)}catch(e){};
   document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-selected',x===bt)); if(latest){render(); scrollTo({top:0})}}));
 document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-selected',x.dataset.tab===tab));
 load(); setInterval(load,60000);
