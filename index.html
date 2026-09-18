@@ -161,6 +161,18 @@ td.why{font-family:var(--sans);color:var(--t3);white-space:normal;max-width:260p
 .row .f{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--t4)}
 .row .f .warn{color:var(--amber)}
 
+/* news: one group per name, newest first; every headline links out */
+.val.word{font-size:clamp(30px,6vw,44px);letter-spacing:-.03em}
+.ng{padding:14px 0;border-bottom:1px solid var(--hair)} .ng:first-child{padding-top:0} .ng:last-child{border-bottom:0;padding-bottom:0}
+.ng-h{display:flex;justify-content:space-between;align-items:center;gap:8px 12px;margin-bottom:6px;flex-wrap:wrap}
+.ng-h b{font-size:15px}
+.ni{padding:8px 0 8px 14px;border-left:2px solid var(--hair2);margin:6px 0}
+.ni-m{display:flex;gap:10px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:3px}
+.ni-t{color:var(--t1);text-decoration:none;font-weight:600;font-size:14px;line-height:1.35;display:block}
+a.ni-t::after{content:" ↗";color:var(--t4);font-weight:400}
+.ni-s{font-size:12.5px;color:var(--t3);margin:4px 0 0;line-height:1.45}
+@media (hover:hover){a.ni-t:hover{color:var(--amber)}}
+
 /* the sheet: the one warm object on the page. dark now, so it no longer glares */
 .sheet{background:radial-gradient(120% 90% at 100% 0%,var(--amber-08),transparent 55%),var(--sheet);border:1px solid var(--sheet-hair);border-radius:12px;padding:18px 20px;font-family:var(--mono);font-size:13px;line-height:1.5;color:var(--t2);align-self:start}
 .sheet .h{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin-bottom:12px;display:flex;justify-content:space-between;gap:12px}
@@ -224,12 +236,13 @@ td.why{font-family:var(--sans);color:var(--t3);white-space:normal;max-width:260p
     <button role="tab" data-tab="bot" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5"/><path d="M10 9v6M14 9v6"/></svg><span class="l">BOT</span><span class="s">BOT</span></button>
     <button role="tab" data-tab="rest" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg><span class="l">REST OF PORTFOLIO</span><span class="s">REST</span></button>
     <button role="tab" data-tab="total" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M16 15h2"/></svg><span class="l">TOTAL</span><span class="s">TOTAL</span></button>
+    <button role="tab" data-tab="news" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h13v14H4z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M7 9h7M7 12h7M7 15h4"/></svg><span class="l">NEWS</span><span class="s">NEWS</span></button>
   </div>
 </nav>
 <main class="app">
   <div class="wrap">
     <div class="err" id="err"></div>
-    <section id="view"></section>
+    <section id="view"><p class="note" style="padding:28px 0">Loading the latest snapshot…</p></section>
   </div>
 </main>
 
@@ -244,11 +257,15 @@ const dmy=s=>new Date(s+(s.length===10?'T12:00:00':'')).toLocaleDateString('en-G
 const dmyhm=d=>d.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).replace(',','').toUpperCase();
 const ARROW='<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 2 9 8H1z" fill="currentColor"/></svg>';
 const ARROW_DN='<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 8 1 2h8z" fill="currentColor"/></svg>';
+// Headlines are third-party text, so they are escaped before they touch the DOM.
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeUrl=s=>/^https?:\/\//i.test(s||'')?esc(s):'';
+const host=u=>{try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return ''}};
 const NS='http://www.w3.org/2000/svg';
 const el=(n,a,t)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(t!=null)e.textContent=t;return e};
 const css=v=>getComputedStyle(document.body).getPropertyValue(v).trim();
 const JOBS=[['08:30','Morning check'],['09:31','Opening prices'],['09:44','Momentum buying'],['10:14','Dip buying'],['14:00','Dip selling'],['15:54','Momentum selling'],['16:30','End of day']];
-let latest=null, hist=null, tab='bot', range='ALL';
+let latest=null, hist=null, news=null, tab='bot', range='ALL';
 try{tab=localStorage.getItem('db.tab')||tab;range=localStorage.getItem('db.range')||range}catch(e){}
 
 async function load(){
@@ -263,6 +280,8 @@ async function load(){
     $('#err').style.display='block';
     if(!latest) return;
   }
+  // news.json is optional: absent until the bot publishes it, and never fatal
+  try{const c=await fetch('news.json'+q,{cache:'no-store'}); if(c.ok) news=await c.json(); else if(c.status===404) news=null}catch(e){}
   render();
 }
 
@@ -323,7 +342,8 @@ function chart(pts,W,onPoint){
     svg.appendChild(el('text',{x:L-8,y:y(v)+4,'text-anchor':'end'},ylabs[i]))}
   const span=t1-t0, xt=Math.min(narrow?3:5,pts.length-1);
   for(let i=0;i<=xt;i++){const t=t0+span*i/xt; const d=new Date(t);
-    const lab=span>2*864e5?d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}).toUpperCase():d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    // a range under a day is labelled by time, a few days by date and time, longer by date alone
+    const lab=span>3*864e5?d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}).toUpperCase():span>864e5?dmyhm(d):d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     svg.appendChild(el('text',{x:x(t),y:H-8,'text-anchor':i===0?'start':i===xt?'end':'middle'},lab))}
   const base=pts[0].v; svg.appendChild(el('line',{x1:L,x2:W-R,y1:y(base),y2:y(base),stroke:css('--t4'),'stroke-width':1,'stroke-dasharray':'3 4'}));
   const d='M'+pts.map(p=>x(p.t.getTime()).toFixed(1)+','+y(p.v).toFixed(1)).join(' L');
@@ -367,7 +387,7 @@ function watchChart(){
 }
 
 // [label, value, class, context line, {pct, kind}]
-function tiles(items){return '<div class="tiles">'+items.map(([k,v,c,s,m])=>`<div class="tile"><div class="caps">${k}</div><div class="v ${c||''}">${v}</div>${s?`<div class="c">${s}</div>`:''}${m?`<div class="bar ${m.kind||''}"><i style="width:${Math.max(0,Math.min(100,m.pct))}%"></i></div>`:''}</div>`).join('')+'</div>'}
+function tiles(items){return '<div class="tiles">'+items.map(([k,v,c,s,m])=>`<div class="tile"><div class="caps">${k}</div><div class="v ${c||''}">${v}</div>${s?`<div class="c">${s}</div>`:''}${m?`<div class="bar ${m.kind||''}" aria-hidden="true"><i style="width:${Math.max(0,Math.min(100,m.pct))}%"></i></div>`:''}</div>`).join('')+'</div>'}
 function split(parts){ // [[label, share, colour var]]
   return `<div class="bar split" aria-hidden="true">${parts.map(p=>`<i style="flex:${Math.max(p[1],0.4)} 0 0;background:var(--${p[2]})"></i>`).join('')}</div>
   <div class="legend" style="padding-top:10px">${parts.map(p=>`<span><i class="now" style="background:var(--${p[2]})"></i>${p[0]} ${p[1].toFixed(1)}%</span>`).join('')}</div>`;
@@ -446,7 +466,7 @@ function botPositions(ps){
   const rows=ps.map(p=>{const near=p.stop_distance_pct!=null&&p.stop_distance_pct<2, left=p.time_stop-p.sessions_held;
     return `<div class="row"><div class="a"><span><b>${p.symbol}</b>${book(p)}${flags(p)}</span><span class="num ${cls(p.pnl)}">${fmt$(p.pnl)}</span></div>
     <div class="b"><span class="num">${p.entry.toFixed(2)} → ${p.now.toFixed(2)}</span><span class="num ${cls(p.pct)}">${fmtP(p.pct)}</span></div>
-    <div class="bar ${p.book==='B'?'dip':'mom'}"><i style="width:${p.sessions_held/p.time_stop*100}%"></i></div>
+    <div class="bar ${p.book==='B'?'dip':'mom'}" aria-hidden="true"><i style="width:${p.sessions_held/p.time_stop*100}%"></i></div>
     <div class="f"><span class="${left<=2?'warn':''}">Day ${p.sessions_held} of ${p.time_stop}</span><span class="${near?'warn':''}">${p.stop_distance_pct==null?'No price stop':p.stop_distance_pct.toFixed(1)+'% above stop'}</span></div></div>`}).join('');
   return `<div class="tablewrap"><table><thead><tr><th>Position</th><th>Entry</th><th>Now</th><th>Chg</th><th>P&amp;L</th><th>Days</th><th>To stop</th></tr></thead><tbody>${tr}</tbody></table></div><div class="rows">${rows}</div>
   <p class="note">Days counts trading days against each book's limit — Dip 12, Momentum 10. "To stop" is the distance above the Momentum book's 5% stop; the Dip book has no price stop by design.</p>`;
@@ -463,11 +483,47 @@ function restHoldings(r){
 }
 
 function hero(value,sub,d,pct,extra){
-  const k=dir(d);
+  const k=Math.abs(pct)<0.005?'flat':dir(d); // a dollar or two on a $96k account is flat, not down
   return `<div class="hero"><div><div class="val">${fmt$(value)}</div><div class="sub">${sub}</div></div>
   <div class="chips">${extra||''}<div class="delta ${k}">${k==='down'?ARROW_DN:ARROW}<span>${fmt$(d)} · ${fmtP(pct)}</span></div></div></div>`;
 }
 const card=(title,subtitle,inner,badge)=>`<div class="card"><div class="card-h"><div><h2 class="title">${title}</h2><p class="subtitle">${subtitle}</p></div>${badge?`<span class="badge">${badge}</span>`:''}</div>${inner}</div>`;
+
+// NEWS. The bot gathers headlines for the names it holds and publishes news.json;
+// the page groups them by position so a headline sits next to the money it moves.
+function newsItems(){return (news&&Array.isArray(news.items))?news.items.filter(i=>i&&i.symbol&&i.title):[]}
+function newsItem(i){
+  const u=safeUrl(i.url), t=i.published?new Date(i.published):null;
+  return `<div class="ni"><div class="ni-m"><span>${t&&!isNaN(t)?dmyhm(t):''}</span><span>${esc(i.source||host(i.url))}</span></div>
+  ${u?`<a class="ni-t" href="${u}" target="_blank" rel="noopener noreferrer">${esc(i.title)}</a>`:`<span class="ni-t">${esc(i.title)}</span>`}
+  ${i.summary?`<p class="ni-s">${esc(i.summary)}</p>`:''}</div>`;
+}
+function newsFeed(){
+  const b=latest.bot, r=latest.rest, items=newsItems();
+  const by={}; items.forEach(i=>{(by[i.symbol]=by[i.symbol]||[]).push(i)});
+  Object.values(by).forEach(a=>a.sort((x,y)=>new Date(y.published||0)-new Date(x.published||0)));
+  const held=b.positions.map(p=>({s:p.symbol,pill:p.book==='B'?'dip':'mom',lab:p.book==='B'?'Dip':'Mom',ctx:`${fmtP(p.pct)} · held since ${dmy(p.opened)}`,c:cls(p.pct)}));
+  const rest=r.positions.map(p=>({s:p.symbol,pill:'dim',lab:'pre-bot',ctx:`${fmtP(p.pct)} · not the bot's`,c:cls(p.pct)}));
+  const known=new Set([...held,...rest].map(g=>g.s)), closed=new Set((b.closed||[]).map(p=>p.symbol));
+  const other=Object.keys(by).filter(s=>!known.has(s)).map(s=>({s,pill:'dim',lab:closed.has(s)?'closed':'not held',ctx:'',c:''}));
+  const groups=[...held,...rest,...other].map(g=>{const a=by[g.s]||[];
+    return `<div class="ng"><div class="ng-h"><span><b>${esc(g.s)}</b><span class="pill ${g.pill}">${g.lab}</span></span><span class="caps ${g.c}">${esc(g.ctx)}</span></div>
+    ${a.length?a.slice(0,6).map(newsItem).join(''):'<p class="note" style="margin:0">Nothing gathered for this name.</p>'}</div>`}).join('');
+  return groups||'<p class="note">No headlines in the feed.</p>';
+}
+function feedSheet(){
+  if(!news) return `<div class="sheet"><div class="h"><span>Feed</span><span>—</span></div><dl><dt>Status</dt><dd>not published</dd><dt>File</dt><dd>news.json</dd></dl>
+    <div class="line"></div><div class="foot">The bot gathers headlines when it snapshots and uploads them beside latest.json. This page never fetches news itself, so there is nothing to show until it does.</div></div>`;
+  const items=newsItems(), names=new Set(items.map(i=>i.symbol)), src={};
+  items.forEach(i=>{const s=i.source||host(i.url)||'unknown'; src[s]=(src[s]||0)+1});
+  const top=Object.entries(src).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([s,n])=>`<dt>${esc(s)}</dt><dd>${n}</dd>`).join('');
+  const t=new Date(news.generated_at), mins=isNaN(t)?null:Math.round((Date.now()-t)/60000);
+  const age=mins==null?'':mins<1?'just now':mins<60?mins+' min ago':Math.round(mins/60)+' h ago';
+  return `<div class="sheet"><div class="h"><span>Feed</span><span>${isNaN(t)?'':dmy(news.generated_at)}</span></div>
+  <dl><dt>Gathered</dt><dd>${etHM(news.generated_at)||'—'} ET${age?' · '+age:''}</dd><dt>Headlines</dt><dd>${items.length}</dd><dt>Names</dt><dd>${names.size}</dd></dl>
+  ${top?`<div class="line"></div><dl>${top}</dl>`:''}
+  <div class="line"></div><div class="foot">Gathered by the bot when it snapshots; the page never fetches news itself. Headlines are the sources' own words, not eToro's marks, and nothing here is a signal the bot trades on.</div></div>`;
+}
 
 // Every tab has the same shape: hero, chart, [tiles | sheet], then a list if it has one.
 function render(){
@@ -507,6 +563,13 @@ function render(){
     body=`<div class="page">${chartCard('Rest of portfolio','Measured from the first snapshot, not from a purchase price.')}
       <div class="two">${sits}${baseSheet(r.value,p0,'Measured from the first snapshot, not from a purchase price. A deposit or withdrawal shows up as a step, because this tab charts an account, not a return.')}</div>
       ${card('Holdings','Positions the bot does not manage.',restHoldings(r),r.positions.length+' held')}</div>`;
+  } else if(tab==='news'){
+    const items=newsItems(), names=new Set(items.map(i=>i.symbol));
+    head=`<div class="hero"><div><div class="val word">Headlines</div><div class="sub">FOR THE NAMES THE BOT HOLDS · GATHERED BY THE BOT, NOT BY THIS PAGE</div></div>
+      <div class="chips"><div class="regime">${items.length} headline${items.length===1?'':'s'} · ${names.size} name${names.size===1?'':'s'}</div></div></div>`;
+    const feed=news?card('By position','Newest first. Each headline links to its source.',newsFeed(),(news.generated_at?etHM(news.generated_at)+' ET':''))
+      :card('No feed yet','Headlines appear here once the bot starts publishing them.','<p class="note">When it does, each name the bot holds gets its own group — the headline next to the position it moves, with the source, the time, and a link out.</p>');
+    body=`<div class="page"><div class="two">${feed}${feedSheet()}</div></div>`;
   } else {
     const p0=(hist&&hist.meta&&hist.meta.total0)||t.value, d=t.value-p0;
     head=hero(t.value,`WHOLE ACCOUNT · CASH ${fmt$(t.cash)} · SINCE ${since}`,d,p0?d/p0*100:0);
@@ -517,6 +580,7 @@ function render(){
       <div class="two">${comp}${baseSheet(t.value,p0,'Bot and rest together. The bot\'s own gain is measured against its stake on the BOT tab; here everything is measured from the first snapshot.')}</div></div>`;
   }
   $('#view').innerHTML=head+body;
+  document.title=(tab==='news'?'News':fmt$(tab==='bot'?b.equity:tab==='rest'?r.value:t.value))+' · Dashboardia';
   drawChart(); watchChart();
   document.querySelectorAll('.seg button').forEach(bt=>bt.addEventListener('click',()=>{range=bt.dataset.r;try{localStorage.setItem('db.range',range)}catch(e){};render()}));
 }
@@ -525,6 +589,7 @@ document.querySelectorAll('#tabs button').forEach(bt=>bt.addEventListener('click
   document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-selected',x===bt)); if(latest){render(); scrollTo({top:0})}}));
 document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-selected',x.dataset.tab===tab));
 load(); setInterval(load,60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden) load()}); // coming back to the tab refreshes at once
 })();
 </script>
 </body>
