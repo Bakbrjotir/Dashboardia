@@ -168,10 +168,13 @@ td.why{font-family:var(--sans);color:var(--t3);white-space:normal;max-width:260p
 .ng-h b{font-size:15px}
 .ni{padding:8px 0 8px 14px;border-left:2px solid var(--hair2);margin:6px 0}
 .ni-m{display:flex;gap:10px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:3px}
-.ni-t{color:var(--t1);text-decoration:none;font-weight:600;font-size:14px;line-height:1.35;display:block}
+/* a source that ships a whole lede as its title should not swamp the group */
+.ni-t{color:var(--t1);text-decoration:none;font-weight:600;font-size:14px;line-height:1.35;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
 a.ni-t::after{content:" ↗";color:var(--t4);font-weight:400}
 .ni-s{font-size:12.5px;color:var(--t3);margin:4px 0 0;line-height:1.45}
 @media (hover:hover){a.ni-t:hover{color:var(--amber)}}
+/* the feed is long; its sheet keeps pace with it instead of leaving a dead column */
+@media (min-width:820px){body[data-tab="news"] .sheet{position:sticky;top:63px}}
 
 /* the sheet: the one warm object on the page. dark now, so it no longer glares */
 .sheet{background:radial-gradient(120% 90% at 100% 0%,var(--amber-08),transparent 55%),var(--sheet);border:1px solid var(--sheet-hair);border-radius:12px;padding:18px 20px;font-family:var(--mono);font-size:13px;line-height:1.5;color:var(--t2);align-self:start}
@@ -402,6 +405,9 @@ function chartCard(title,subtitle){
 // The wall-clock time written inside an ET timestamp, e.g. "13:49" - the bot's
 // own clock, not the viewer's.
 const etHM=s=>(typeof s==='string'&&s.length>=16)?s.slice(11,16):'';
+// Read the date out of an ET timestamp the same way - the market's own calendar,
+// so an 8pm New York headline never shows up dated tomorrow.
+const etDMY=s=>{const m=/^(\d{4})-(\d\d)-(\d\d)/.exec(s||''); return m?dmy(m[0]):''};
 const breakerText=k=>{ // one line for the Dip book's circuit breaker
   if(!k) return 'armed'; if(k.peak==null) return 'armed · no Dip session yet';
   if(k.paused_sessions) return `PAUSED · ${k.paused_sessions} sessions`;
@@ -493,8 +499,8 @@ const card=(title,subtitle,inner,badge)=>`<div class="card"><div class="card-h">
 // the page groups them by position so a headline sits next to the money it moves.
 function newsItems(){return (news&&Array.isArray(news.items))?news.items.filter(i=>i&&i.symbol&&i.title):[]}
 function newsItem(i){
-  const u=safeUrl(i.url), t=i.published?new Date(i.published):null;
-  return `<div class="ni"><div class="ni-m"><span>${t&&!isNaN(t)?dmyhm(t):''}</span><span>${esc(i.source||host(i.url))}</span></div>
+  const u=safeUrl(i.url), d=etDMY(i.published), h=etHM(i.published);
+  return `<div class="ni"><div class="ni-m"><span>${d&&h?d+' '+h+' ET':''}</span><span>${esc(i.source||host(i.url))}</span></div>
   ${u?`<a class="ni-t" href="${u}" target="_blank" rel="noopener noreferrer">${esc(i.title)}</a>`:`<span class="ni-t">${esc(i.title)}</span>`}
   ${i.summary?`<p class="ni-s">${esc(i.summary)}</p>`:''}</div>`;
 }
@@ -519,7 +525,7 @@ function feedSheet(){
   const top=Object.entries(src).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([s,n])=>`<dt>${esc(s)}</dt><dd>${n}</dd>`).join('');
   const t=new Date(news.generated_at), mins=isNaN(t)?null:Math.round((Date.now()-t)/60000);
   const age=mins==null?'':mins<1?'just now':mins<60?mins+' min ago':Math.round(mins/60)+' h ago';
-  return `<div class="sheet"><div class="h"><span>Feed</span><span>${isNaN(t)?'':dmy(news.generated_at)}</span></div>
+  return `<div class="sheet"><div class="h"><span>Feed</span><span>${etDMY(news.generated_at)}</span></div>
   <dl><dt>Gathered</dt><dd>${etHM(news.generated_at)||'—'} ET${age?' · '+age:''}</dd><dt>Headlines</dt><dd>${items.length}</dd><dt>Names</dt><dd>${names.size}</dd></dl>
   ${top?`<div class="line"></div><dl>${top}</dl>`:''}
   <div class="line"></div><div class="foot">Gathered by the bot when it snapshots; the page never fetches news itself. Headlines are the sources' own words, not eToro's marks, and nothing here is a signal the bot trades on.</div></div>`;
