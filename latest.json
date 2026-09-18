@@ -1,15 +1,15 @@
 {
- "generated_at": "2026-09-18T08:10:03-04:00",
- "generated_local": "2026-09-18T12:10:03",
+ "generated_at": "2026-09-18T08:15:03-04:00",
+ "generated_local": "2026-09-18T12:15:04",
  "env": "virtual",
  "regime": "up",
  "bot": {
   "stake": 4000.0,
-  "equity": 4042.28,
+  "equity": 4041.64,
   "cash": 2800.0,
-  "pct": 1.057,
+  "pct": 1.041,
   "realized": 0,
-  "unrealized": 42.28,
+  "unrealized": 41.64,
   "fees_paid": 3.0,
   "closed_trades": 0,
   "closed": [],
@@ -36,7 +36,7 @@
     "slots": 2
    },
    "C": {
-    "equity": 1242.28,
+    "equity": 1241.64,
     "cash": 0.0,
     "alloc": 1200.0,
     "open": 3,
@@ -75,15 +75,15 @@
     "position_id": 3600156663,
     "opened": "2026-09-16",
     "entry": 143.0,
-    "now": 158.6,
+    "now": 158.37,
     "units": 2.777777,
     "amount": 397.22,
-    "pnl": 43.33,
-    "pct": 10.909,
+    "pnl": 42.69,
+    "pct": 10.748,
     "sessions_held": 2,
     "time_stop": 10,
     "stop_price": 135.85,
-    "stop_distance_pct": 16.75
+    "stop_distance_pct": 16.58
    },
    {
     "symbol": "VEEV",
@@ -104,34 +104,34 @@
   ],
   "day": {
    "open_equity": 4044.81,
-   "pnl": -2.53,
-   "pct": -0.063,
+   "pnl": -3.17,
+   "pct": -0.078,
    "basis": "2026-09-18T08:00:05-04:00",
-   "snapshots": 3
+   "snapshots": 4
   }
  },
  "rest": {
-  "value": 95970.11,
+  "value": 95972.24,
   "cash": 94124.3,
-  "positions_value": 1845.81,
+  "positions_value": 1847.94,
   "positions": [
    {
     "symbol": "BTC",
     "position_id": 2297071823,
     "opened": "2022-06-24",
     "entry": 21112.96,
-    "now": 77941.4,
+    "now": 78031.2,
     "units": 0.023682,
     "amount": 500.0,
-    "value": 1845.81,
-    "pnl": 1345.81,
-    "pct": 269.162,
+    "value": 1847.94,
+    "pnl": 1347.94,
+    "pct": 269.588,
     "legacy": true
    }
   ]
  },
  "total": {
-  "value": 100012.39,
+  "value": 100013.88,
   "cash": 96924.3
  }
 }
