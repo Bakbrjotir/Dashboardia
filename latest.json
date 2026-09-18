@@ -1,15 +1,15 @@
 {
- "generated_at": "2026-09-18T08:20:03-04:00",
- "generated_local": "2026-09-18T12:20:03",
+ "generated_at": "2026-09-18T08:25:03-04:00",
+ "generated_local": "2026-09-18T12:25:03",
  "env": "virtual",
  "regime": "up",
  "bot": {
   "stake": 4000.0,
-  "equity": 4042.86,
+  "equity": 4033.51,
   "cash": 2800.0,
-  "pct": 1.072,
+  "pct": 0.838,
   "realized": 0,
-  "unrealized": 42.86,
+  "unrealized": 33.51,
   "fees_paid": 3.0,
   "closed_trades": 0,
   "closed": [],
@@ -36,7 +36,7 @@
     "slots": 2
    },
    "C": {
-    "equity": 1242.86,
+    "equity": 1233.51,
     "cash": 0.0,
     "alloc": 1200.0,
     "open": 3,
@@ -75,15 +75,15 @@
     "position_id": 3600156663,
     "opened": "2026-09-16",
     "entry": 143.0,
-    "now": 158.81,
+    "now": 158.64,
     "units": 2.777777,
     "amount": 397.22,
-    "pnl": 43.92,
-    "pct": 11.056,
+    "pnl": 43.44,
+    "pct": 10.937,
     "sessions_held": 2,
     "time_stop": 10,
     "stop_price": 135.85,
-    "stop_distance_pct": 16.9
+    "stop_distance_pct": 16.78
    },
    {
     "symbol": "VEEV",
@@ -91,47 +91,47 @@
     "position_id": 3600156664,
     "opened": "2026-09-16",
     "entry": 268.0,
-    "now": 262.0,
+    "now": 256.05,
     "units": 1.492481,
     "amount": 399.98,
-    "pnl": -8.95,
-    "pct": -2.239,
+    "pnl": -17.84,
+    "pct": -4.459,
     "sessions_held": 2,
     "time_stop": 10,
     "stop_price": 254.6,
-    "stop_distance_pct": 2.91
+    "stop_distance_pct": 0.57
    }
   ],
   "day": {
    "open_equity": 4044.81,
-   "pnl": -1.95,
-   "pct": -0.048,
+   "pnl": -11.3,
+   "pct": -0.279,
    "basis": "2026-09-18T08:00:05-04:00",
-   "snapshots": 5
+   "snapshots": 6
   }
  },
  "rest": {
-  "value": 95969.99,
+  "value": 95969.98,
   "cash": 94124.3,
-  "positions_value": 1845.69,
+  "positions_value": 1845.68,
   "positions": [
    {
     "symbol": "BTC",
     "position_id": 2297071823,
     "opened": "2022-06-24",
     "entry": 21112.96,
-    "now": 77936.24,
+    "now": 77935.7,
     "units": 0.023682,
     "amount": 500.0,
-    "value": 1845.69,
-    "pnl": 1345.69,
-    "pct": 269.138,
+    "value": 1845.68,
+    "pnl": 1345.68,
+    "pct": 269.136,
     "legacy": true
    }
   ]
  },
  "total": {
-  "value": 100012.85,
+  "value": 100003.49,
   "cash": 96924.3
  }
 }
