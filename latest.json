@@ -1,16 +1,16 @@
 {
- "generated_at": "2026-09-18T13:05:03-04:00",
- "generated_local": "2026-09-18T17:05:03",
+ "generated_at": "2026-09-18T13:10:03-04:00",
+ "generated_local": "2026-09-18T17:10:03",
  "env": "virtual",
  "regime": "up",
- "spy": 759.36,
+ "spy": 759.26,
  "bot": {
   "stake": 4000.0,
-  "equity": 4095.3,
+  "equity": 4093.76,
   "cash": 0.0,
-  "pct": 2.383,
+  "pct": 2.344,
   "realized": 0,
-  "unrealized": 95.3,
+  "unrealized": 93.76,
   "fees_paid": 5.0,
   "closed_trades": 0,
   "closed": [],
@@ -30,14 +30,14 @@
   },
   "books": {
    "B": {
-    "equity": 2858.34,
+    "equity": 2856.1,
     "cash": 0.0,
     "alloc": 2800.0,
     "open": 2,
     "slots": 2
    },
    "C": {
-    "equity": 1236.96,
+    "equity": 1237.66,
     "cash": 0.0,
     "alloc": 1200.0,
     "open": 3,
@@ -48,8 +48,8 @@
    "applies_to": "B",
    "paused_sessions": 0,
    "peak": 2833.49,
-   "equity": 2858.34,
-   "drawdown_pct": 0.88,
+   "equity": 2856.1,
+   "drawdown_pct": 0.8,
    "trip_pct": -10.0,
    "cooldown_sessions": 20
   },
@@ -60,11 +60,11 @@
     "position_id": 3601191856,
     "opened": "2026-09-18",
     "entry": 492.31,
-    "now": 493.56,
+    "now": 493.68,
     "units": 2.843621,
     "amount": 1399.94,
-    "pnl": 3.55,
-    "pct": 0.254,
+    "pnl": 3.9,
+    "pct": 0.278,
     "sessions_held": 0,
     "time_stop": 12,
     "stop_price": null,
@@ -76,11 +76,11 @@
     "position_id": 3601191857,
     "opened": "2026-09-18",
     "entry": 210.81,
-    "now": 219.1,
+    "now": 218.71,
     "units": 6.640106,
     "amount": 1399.8,
-    "pnl": 55.05,
-    "pct": 3.932,
+    "pnl": 52.46,
+    "pct": 3.747,
     "sessions_held": 0,
     "time_stop": 12,
     "stop_price": null,
@@ -92,15 +92,15 @@
     "position_id": 3600156666,
     "opened": "2026-09-16",
     "entry": 408.05,
-    "now": 422.16,
+    "now": 422.0,
     "units": 0.980175,
     "amount": 399.96,
-    "pnl": 13.83,
-    "pct": 3.458,
+    "pnl": 13.67,
+    "pct": 3.419,
     "sessions_held": 2,
     "time_stop": 10,
     "stop_price": 387.6475,
-    "stop_distance_pct": 8.9
+    "stop_distance_pct": 8.86
    },
    {
     "symbol": "MRNA",
@@ -108,15 +108,15 @@
     "position_id": 3600156663,
     "opened": "2026-09-16",
     "entry": 143.0,
-    "now": 155.5,
+    "now": 155.81,
     "units": 2.777777,
     "amount": 397.22,
-    "pnl": 34.72,
-    "pct": 8.741,
+    "pnl": 35.58,
+    "pct": 8.958,
     "sessions_held": 2,
     "time_stop": 10,
     "stop_price": 135.85,
-    "stop_distance_pct": 14.46
+    "stop_distance_pct": 14.69
    },
    {
     "symbol": "VEEV",
@@ -137,34 +137,34 @@
   ],
   "day": {
    "open_equity": 4044.81,
-   "pnl": 50.49,
-   "pct": 1.248,
+   "pnl": 48.95,
+   "pct": 1.21,
    "basis": "2026-09-18T08:00:05-04:00",
-   "snapshots": 62
+   "snapshots": 63
   }
  },
  "rest": {
-  "value": 96037.03,
+  "value": 96035.39,
   "cash": 94122.56,
-  "positions_value": 1914.47,
+  "positions_value": 1912.83,
   "positions": [
    {
     "symbol": "BTC",
     "position_id": 2297071823,
     "opened": "2022-06-24",
     "entry": 21112.96,
-    "now": 80840.4,
+    "now": 80771.3,
     "units": 0.023682,
     "amount": 500.0,
-    "value": 1914.47,
-    "pnl": 1414.47,
-    "pct": 282.894,
+    "value": 1912.83,
+    "pnl": 1412.83,
+    "pct": 282.566,
     "legacy": true
    }
   ]
  },
  "total": {
-  "value": 100132.33,
+  "value": 100129.15,
   "cash": 94122.56
  }
 }
