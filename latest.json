@@ -1,15 +1,15 @@
 {
- "generated_at": "2026-09-18T09:20:03-04:00",
- "generated_local": "2026-09-18T13:20:04",
+ "generated_at": "2026-09-18T09:25:03-04:00",
+ "generated_local": "2026-09-18T13:25:03",
  "env": "virtual",
  "regime": "up",
  "bot": {
   "stake": 4000.0,
-  "equity": 4043.24,
+  "equity": 4040.86,
   "cash": 2800.0,
-  "pct": 1.081,
+  "pct": 1.022,
   "realized": 0,
-  "unrealized": 43.24,
+  "unrealized": 40.86,
   "fees_paid": 3.0,
   "closed_trades": 0,
   "closed": [],
@@ -36,7 +36,7 @@
     "slots": 2
    },
    "C": {
-    "equity": 1243.24,
+    "equity": 1240.86,
     "cash": 0.0,
     "alloc": 1200.0,
     "open": 3,
@@ -59,15 +59,15 @@
     "position_id": 3600156666,
     "opened": "2026-09-16",
     "entry": 408.05,
-    "now": 420.6,
+    "now": 422.0,
     "units": 0.980175,
     "amount": 399.96,
-    "pnl": 12.3,
-    "pct": 3.076,
+    "pnl": 13.67,
+    "pct": 3.419,
     "sessions_held": 2,
     "time_stop": 10,
     "stop_price": 387.6475,
-    "stop_distance_pct": 8.5
+    "stop_distance_pct": 8.86
    },
    {
     "symbol": "MRNA",
@@ -75,15 +75,15 @@
     "position_id": 3600156663,
     "opened": "2026-09-16",
     "entry": 143.0,
-    "now": 158.15,
+    "now": 156.8,
     "units": 2.777777,
     "amount": 397.22,
-    "pnl": 42.08,
-    "pct": 10.594,
+    "pnl": 38.33,
+    "pct": 9.65,
     "sessions_held": 2,
     "time_stop": 10,
     "stop_price": 135.85,
-    "stop_distance_pct": 16.42
+    "stop_distance_pct": 15.42
    },
    {
     "symbol": "VEEV",
@@ -104,34 +104,34 @@
   ],
   "day": {
    "open_equity": 4044.81,
-   "pnl": -1.57,
-   "pct": -0.039,
+   "pnl": -3.95,
+   "pct": -0.098,
    "basis": "2026-09-18T08:00:05-04:00",
-   "snapshots": 17
+   "snapshots": 18
   }
  },
  "rest": {
-  "value": 95972.26,
+  "value": 95971.3,
   "cash": 94124.3,
-  "positions_value": 1847.96,
+  "positions_value": 1847.0,
   "positions": [
    {
     "symbol": "BTC",
     "position_id": 2297071823,
     "opened": "2022-06-24",
     "entry": 21112.96,
-    "now": 78032.1,
+    "now": 77991.49,
     "units": 0.023682,
     "amount": 500.0,
-    "value": 1847.96,
-    "pnl": 1347.96,
-    "pct": 269.592,
+    "value": 1847.0,
+    "pnl": 1347.0,
+    "pct": 269.4,
     "legacy": true
    }
   ]
  },
  "total": {
-  "value": 100015.5,
+  "value": 100012.16,
   "cash": 96924.3
  }
 }
