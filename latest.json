@@ -1,6 +1,6 @@
 {
- "generated_at": "2026-09-19T09:15:03-04:00",
- "generated_local": "2026-09-19T13:15:03",
+ "generated_at": "2026-09-19T09:20:03-04:00",
+ "generated_local": "2026-09-19T13:20:04",
  "env": "virtual",
  "regime": "up",
  "spy": null,
@@ -137,31 +137,31 @@
    "pnl": 0.0,
    "pct": 0.0,
    "basis": "2026-09-19T07:17:41-04:00",
-   "snapshots": 17
+   "snapshots": 18
   }
  },
  "rest": {
-  "value": 96050.76,
+  "value": 96051.77,
   "cash": 94127.33,
-  "positions_value": 1923.43,
+  "positions_value": 1924.44,
   "positions": [
    {
     "symbol": "BTC",
     "position_id": 2297071823,
     "opened": "2022-06-24",
     "entry": 21112.96,
-    "now": 81219.1,
+    "now": 81261.8,
     "units": 0.023682,
     "amount": 500.0,
-    "value": 1923.43,
-    "pnl": 1423.43,
-    "pct": 284.686,
+    "value": 1924.44,
+    "pnl": 1424.44,
+    "pct": 284.888,
     "legacy": true
    }
   ]
  },
  "total": {
-  "value": 100150.12,
+  "value": 100151.13,
   "cash": 96995.09
  }
 }
