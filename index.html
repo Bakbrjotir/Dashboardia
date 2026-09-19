@@ -26,6 +26,7 @@
   --dip:#6FB3D2; --mom:#C9A0DC; --dip-10:rgba(111,179,210,.10); --mom-10:rgba(201,160,220,.10);
   --teal:#7CC5B0; --silver:#C9CDD3;
   --line:var(--dip); --area:rgba(111,179,210,.14); --glow:rgba(111,179,210,.30);
+  --mkt:#8E949C;  /* the benchmark line: neutral on purpose, so the tab's own colour leads */
   --up:#4ADE80; --down:#F07A7A; --up-10:rgba(74,222,128,.10); --down-10:rgba(240,122,122,.10);
   --sheet:#1A1814; --sheet-hair:rgba(242,169,59,.14);
   --sans:"Figtree","Nunito Sans","Segoe UI",Helvetica,Arial,sans-serif;
@@ -36,7 +37,7 @@
 }
 /* each tab draws its curve in its own hue, so the eye knows where it is */
 body[data-tab="rest"]{--line:var(--teal);--area:rgba(124,197,176,.14);--glow:rgba(124,197,176,.30)}
-body[data-tab="total"]{--line:var(--silver);--area:rgba(201,205,211,.12);--glow:rgba(201,205,211,.22)}
+body[data-tab="total"]{--line:var(--silver);--area:rgba(201,205,211,.12);--glow:rgba(201,205,211,.22);--mkt:#71767D}
 *{box-sizing:border-box}
 html{background:var(--ground);-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{margin:0;background:var(--ground);color:var(--t1);font-family:var(--sans);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
@@ -115,6 +116,14 @@ button{font-family:inherit;touch-action:manipulation}
 
 /* chart card */
 .chartbox{position:relative}
+/* the chart's controls: the benchmark toggle reads as a mode switch, the ranges as a dial */
+.ctrl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;flex:none}
+.mtog{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 12px;border:1px solid var(--hair2);background:var(--tint2);color:var(--t3);font:700 11px var(--mono);letter-spacing:.10em;text-transform:uppercase;border-radius:9px;cursor:pointer;white-space:nowrap}
+.mtog svg{width:14px;height:14px;flex:none;opacity:.6}
+.mtog[aria-pressed="true"]{background:var(--amber-16);border-color:var(--amber);color:var(--amber)}
+.mtog[aria-pressed="true"] svg{opacity:1}
+.mtog:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+@media (hover:hover){.mtog:hover{color:var(--t2);border-color:var(--chip)} .mtog[aria-pressed="true"]:hover{color:var(--amber-l)}}
 .seg{display:inline-flex;gap:2px;background:var(--tint2);border:1px solid var(--hair);border-radius:9px;padding:3px;flex:none}
 .seg button{border:0;background:transparent;color:var(--t4);font:700 11px var(--mono);letter-spacing:.10em;padding:6px 10px;border-radius:6px;cursor:pointer;min-height:28px}
 .seg button[aria-pressed="true"]{background:var(--amber-10);color:var(--amber)}
@@ -123,6 +132,8 @@ button{font-family:inherit;touch-action:manipulation}
 .readout .l{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--t4);flex:1 1 100%;line-height:1}
 .readout .v{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--t1);font-variant-numeric:tabular-nums;line-height:1.1}
 .readout .p{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
+.readout .v.pos{color:var(--up)} .readout .v.neg{color:var(--down)}
+.readout .p.mkt{color:var(--mkt)}
 .readout .d{font-family:var(--mono);font-size:11px;color:var(--t4);margin-left:auto}
 #chart{min-height:160px;margin:0 -4px}
 svg.plot{width:100%;height:auto;display:block;font-family:var(--mono);font-size:11px;touch-action:pan-y;cursor:crosshair}
@@ -131,6 +142,7 @@ svg.plot text{fill:var(--t5)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{width:14px;height:0;border-top:2px solid var(--line);border-radius:2px}
 .legend i.base{border-top:1px dashed var(--t4)}
+.legend i.mkt{width:20px;border-top:2px dashed var(--mkt)}
 .legend i.now{width:7px;height:7px;border:0;border-radius:50%;background:var(--amber)}
 
 /* tables (wide) */
@@ -268,8 +280,8 @@ const NS='http://www.w3.org/2000/svg';
 const el=(n,a,t)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(t!=null)e.textContent=t;return e};
 const css=v=>getComputedStyle(document.body).getPropertyValue(v).trim();
 const JOBS=[['08:30','Morning check'],['09:31','Opening prices'],['09:44','Momentum buying'],['10:14','Dip buying'],['14:00','Dip selling'],['15:54','Momentum selling'],['16:30','End of day']];
-let latest=null, hist=null, news=null, tab='bot', range='ALL';
-try{tab=localStorage.getItem('db.tab')||tab;range=localStorage.getItem('db.range')||range}catch(e){}
+let latest=null, hist=null, news=null, tab='bot', range='ALL', vsOn=false;
+try{tab=localStorage.getItem('db.tab')||tab;range=localStorage.getItem('db.range')||range;vsOn=localStorage.getItem('db.vs')==='1'}catch(e){}
 
 async function load(){
   const q='?ts='+Date.now();
@@ -311,30 +323,62 @@ function stamp(){
 function series(){
   const key=tab; const rows=(hist&&hist.rows)||[];
   const now=Date.now(); const span={'1D':1,'1W':7,'1M':31,'ALL':1e6}[range]*864e5;
-  let pts=rows.filter(r=>now-new Date(r.t)<=span).map(r=>({t:new Date(r.t),v:r[key],p:r[key+'_pct']}));
-  if(pts.length<2&&rows.length) pts=rows.slice(-Math.min(rows.length,2)).map(r=>({t:new Date(r.t),v:r[key],p:r[key+'_pct']}));
+  const pt=r=>({t:new Date(r.t),v:r[key],p:r[key+'_pct'],m:typeof r.spy==='number'?r.spy:null});
+  let pts=rows.filter(r=>now-new Date(r.t)<=span).map(pt);
+  if(pts.length<2&&rows.length) pts=rows.slice(-Math.min(rows.length,2)).map(pt);
   if(pts.length>600){const step=pts.length/600;pts=pts.filter((_,i)=>Math.floor(i%step)===0||i===pts.length-1)}
   return pts;
+}
+
+// THE BENCHMARK. Both curves are rebased to zero at the first instant where this
+// tab and the market are BOTH known - not at the edge of the range - so a gap in
+// the market data cannot flatter either side, and the distance between the two
+// lines is a true like-for-like figure. Returns null until the bot ships `spy`,
+// which is what keeps the toggle and the chip hidden rather than broken.
+const MARKET='S&P 500';
+function marketView(pts){
+  const i=pts.findIndex(p=>p.m!=null&&p.v!=null&&p.m>0&&p.v>0);
+  if(i<0) return null;
+  const v0=pts[i].v, m0=pts[i].m, rest=pts.slice(i);
+  const you=rest.filter(p=>p.v!=null).map(p=>({t:p.t,v:(p.v/v0-1)*100}));
+  const mkt=rest.filter(p=>p.m!=null).map(p=>({t:p.t,v:(p.m/m0-1)*100}));
+  if(you.length<2||mkt.length<2) return null;
+  const yl=you[you.length-1].v, ml=mkt[mkt.length-1].v;
+  return {you,mkt,from:rest[0].t,you_pct:yl,mkt_pct:ml,gap:yl-ml};
+}
+// The always-on figure. Same range as the chart, so nothing on screen describes
+// a window other than the one being looked at.
+function vsChip(){
+  const v=marketView(series()); if(!v) return '';
+  // names the real basis: on BOT "all time" already means the stake, and this
+  // comparison starts at the first snapshot instead
+  const k=dir(v.gap), lab=range==='ALL'?'since '+dmy(v.from):range;
+  return `<div class="delta ${k}"><span class="k">vs ${MARKET}</span>${k==='down'?ARROW_DN:ARROW}<span>${fmtP(v.gap)}</span><small>${lab}</small></div>`;
 }
 
 // Drawn at the width it is shown at, so its type stays 11px on a phone.
 // Scrubbing writes into the readout row above the plot rather than a floating
 // tooltip, which a thumb would cover.
-function chart(pts,W,onPoint){
+function chart(pts,W,onPoint,mv){
   const narrow=W<480, H=narrow?210:300, R=12, T=14, B=26;
-  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':'Value over time',class:'plot'});
-  if(pts.length<2){
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':mv?'This tab and the market, both measured from zero':'Value over time',class:'plot'});
+  const prim=mv?mv.you:pts;
+  if(prim.length<2){
     svg.appendChild(el('text',{x:W/2,y:H/2-6,'text-anchor':'middle'},'NOT ENOUGH HISTORY YET'));
     svg.appendChild(el('text',{x:W/2,y:H/2+12,'text-anchor':'middle'},'THE CURVE STARTS WITH THE NEXT SNAPSHOTS'));
     return svg;
   }
-  const vs=pts.map(p=>p.v); let lo=Math.min(...vs), hi=Math.max(...vs); if(hi-lo<1e-9){lo-=1;hi+=1}
+  const vs=mv?mv.you.map(p=>p.v).concat(mv.mkt.map(p=>p.v)):pts.map(p=>p.v);
+  let lo=Math.min(...vs), hi=Math.max(...vs); if(hi-lo<1e-9){lo-=1;hi+=1}
   const pad=(hi-lo)*0.10; lo-=pad; hi+=pad;
-  const dec=(hi-lo)<8?2:0;
-  const ylab=v=>'$'+v.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+  const dec=mv?((hi-lo)<2?2:1):((hi-lo)<8?2:0);
+  const ylab=mv?(v=>(v>0?'+':'')+v.toFixed(dec)+'%')
+               :(v=>'$'+v.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec}));
   const ylabs=[0,1,2,3,4].map(i=>ylab(lo+(hi-lo)*i/4));
   const L=12+Math.max(...ylabs.map(s=>s.length))*6.7;
-  const t0=pts[0].t.getTime(), t1=pts[pts.length-1].t.getTime()||t0+1;
+  const t0=(mv?mv.from:pts[0].t).getTime();
+  const t1=(mv?Math.max(mv.you[mv.you.length-1].t.getTime(),mv.mkt[mv.mkt.length-1].t.getTime())
+             :pts[pts.length-1].t.getTime())||t0+1;
   const x=t=>L+(t-t0)/(t1-t0||1)*(W-L-R), y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
   const defs=el('defs',{}); const gid='area'+Math.random().toString(36).slice(2,7);
   const g=el('linearGradient',{id:gid,x1:0,y1:0,x2:0,y2:1});
@@ -348,18 +392,26 @@ function chart(pts,W,onPoint){
     // a range under a day is labelled by time, a few days by date and time, longer by date alone
     const lab=span>3*864e5?d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}).toUpperCase():span>864e5?dmyhm(d):d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     svg.appendChild(el('text',{x:x(t),y:H-8,'text-anchor':i===0?'start':i===xt?'end':'middle'},lab))}
-  const base=pts[0].v; svg.appendChild(el('line',{x1:L,x2:W-R,y1:y(base),y2:y(base),stroke:css('--t4'),'stroke-width':1,'stroke-dasharray':'3 4'}));
-  const d='M'+pts.map(p=>x(p.t.getTime()).toFixed(1)+','+y(p.v).toFixed(1)).join(' L');
-  svg.appendChild(el('path',{d:d+` L${x(t1).toFixed(1)},${y(lo)} L${x(t0).toFixed(1)},${y(lo)} Z`,fill:`url(#${gid})`}));
-  svg.appendChild(el('path',{d,fill:'none',stroke:css('--line'),'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round',style:'filter:drop-shadow(0 0 6px '+css('--glow')+')'}));
-  const last=pts[pts.length-1]; svg.appendChild(el('circle',{cx:x(last.t.getTime()),cy:y(last.v),r:4.5,fill:css('--amber'),stroke:css('--panel'),'stroke-width':2}));
+  // in benchmark mode the baseline IS the shared zero both curves start from
+  const base=mv?0:pts[0].v; svg.appendChild(el('line',{x1:L,x2:W-R,y1:y(base),y2:y(base),stroke:css('--t4'),'stroke-width':1,'stroke-dasharray':'3 4'}));
+  const line=a=>'M'+a.map(p=>x(p.t.getTime()).toFixed(1)+','+y(p.v).toFixed(1)).join(' L');
+  const d=line(prim);
+  // no area fill against a benchmark - two washes of colour would muddy the one
+  // thing the view exists to show, which is the distance between the lines
+  if(!mv) svg.appendChild(el('path',{d:d+` L${x(t1).toFixed(1)},${y(lo)} L${x(t0).toFixed(1)},${y(lo)} Z`,fill:`url(#${gid})`}));
+  if(mv) svg.appendChild(el('path',{d:line(mv.mkt),fill:'none',stroke:css('--mkt'),'stroke-width':1.5,'stroke-dasharray':'5 4','stroke-linejoin':'round','stroke-linecap':'round'}));
+  svg.appendChild(el('path',{d,fill:'none',stroke:css('--line'),'stroke-width':mv?2.6:2,'stroke-linejoin':'round','stroke-linecap':'round',style:'filter:drop-shadow(0 0 6px '+css('--glow')+')'}));
+  const last=prim[prim.length-1]; svg.appendChild(el('circle',{cx:x(last.t.getTime()),cy:y(last.v),r:4.5,fill:css('--amber'),stroke:css('--panel'),'stroke-width':2}));
   const vline=el('line',{y1:T,y2:H-B,stroke:css('--t3'),'stroke-width':1,'stroke-dasharray':'2 3',visibility:'hidden'}); const dot=el('circle',{r:4.5,fill:css('--amber'),stroke:css('--panel'),'stroke-width':2,visibility:'hidden'});
   svg.appendChild(vline); svg.appendChild(dot);
   const hit=el('rect',{x:L,y:T,width:W-L-R,height:H-T-B,fill:'transparent'}); svg.appendChild(hit);
   const show=ev=>{const r=svg.getBoundingClientRect(); const px=(ev.clientX-r.left)/r.width*W; const tt=t0+(px-L)/(W-L-R)*(t1-t0);
-    let best=pts[0],bd=1e18; for(const p of pts){const dd=Math.abs(p.t.getTime()-tt); if(dd<bd){bd=dd;best=p}}
+    let best=prim[0],bd=1e18; for(const p of prim){const dd=Math.abs(p.t.getTime()-tt); if(dd<bd){bd=dd;best=p}}
     const cx=x(best.t.getTime()),cy=y(best.v); vline.setAttribute('x1',cx);vline.setAttribute('x2',cx);vline.setAttribute('visibility','visible');
-    dot.setAttribute('cx',cx);dot.setAttribute('cy',cy);dot.setAttribute('visibility','visible'); onPoint(best)};
+    dot.setAttribute('cx',cx);dot.setAttribute('cy',cy);dot.setAttribute('visibility','visible');
+    if(!mv) return onPoint(best);
+    let bm=null,md=1e18; for(const p of mv.mkt){const dd=Math.abs(p.t.getTime()-best.t.getTime()); if(dd<md){md=dd;bm=p}}
+    onPoint({t:best.t,v:best.v,m:bm?bm.v:null,pct:true})};
   const hide=()=>{vline.setAttribute('visibility','hidden');dot.setAttribute('visibility','hidden');onPoint(null)};
   hit.addEventListener('pointerdown',show); hit.addEventListener('pointermove',show);
   hit.addEventListener('pointerleave',hide); hit.addEventListener('pointercancel',hide); hit.addEventListener('pointerup',hide);
@@ -368,9 +420,20 @@ function chart(pts,W,onPoint){
 
 function readout(p){
   const ro=$('#readout'); if(!ro||!latest) return;
-  const pts=series(); const last=pts[pts.length-1]; const q=p||last; if(!q) return;
+  const pts=series(), mv=vsOn?marketView(pts):null;
+  if(mv){ // against the benchmark the readout carries both curves and the gap
+    const yl=mv.you[mv.you.length-1], ml=mv.mkt[mv.mkt.length-1];
+    const q=(p&&p.pct)?p:{t:yl.t,v:yl.v,m:ml.v};
+    ro.querySelector('.l').textContent=(p?'':'LATEST · ')+dmyhm(q.t);
+    const ve=ro.querySelector('.v'); ve.textContent=fmtP(q.v); ve.className='v '+cls(q.v);
+    const pe=ro.querySelector('.p'); pe.textContent=MARKET+' '+(q.m==null?'—':fmtP(q.m)); pe.className='p mkt';
+    const gap=q.m==null?null:q.v-q.m;
+    ro.querySelector('.d').textContent=gap==null?'':(gap>=0?'ahead by ':'behind by ')+Math.abs(gap).toFixed(2)+'%';
+    return;
+  }
+  const last=pts[pts.length-1]; const q=(p&&!p.pct)?p:last; if(!q) return;
   ro.querySelector('.l').textContent=(p?'':'LATEST · ')+dmyhm(q.t);
-  ro.querySelector('.v').textContent=fmt$(q.v);
+  const ve=ro.querySelector('.v'); ve.textContent=fmt$(q.v); ve.className='v';
   const pe=ro.querySelector('.p'); pe.textContent=fmtP(q.p); pe.className='p '+cls(q.p);
   ro.querySelector('.d').textContent=p?'':(tab==='bot'?'vs stake':'vs first snapshot');
 }
@@ -379,7 +442,8 @@ let chartW=0, ro=null;
 function drawChart(){
   const box=$('#chart'); if(!box) return;
   chartW=Math.max(260,Math.round(box.clientWidth));
-  box.replaceChildren(chart(series(),chartW,readout)); readout(null);
+  const pts=series(), mv=vsOn?marketView(pts):null;
+  box.replaceChildren(chart(pts,chartW,readout,mv)); readout(null);
 }
 function watchChart(){
   const box=$('#chart'); if(!box) return;
@@ -397,9 +461,22 @@ function split(parts){ // [[label, share, colour var]]
 }
 function chartCard(title,subtitle){
   const ranges=['1D','1W','1M','ALL'].map(k=>`<button aria-pressed="${k===range}" data-r="${k}">${k}</button>`).join('');
-  return `<div class="card chartbox"><div class="card-h"><div><h2 class="title">${title}</h2><p class="subtitle">${subtitle}</p></div><div class="seg" role="group" aria-label="Range">${ranges}</div></div>
+  // the toggle only exists once the bot ships a benchmark to toggle to
+  const mv=marketView(series()), on=vsOn&&mv;
+  const tog=mv?`<button class="mtog" id="mtog" aria-pressed="${vsOn?'true':'false'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16l5-5 4 3 9-9"/><path d="M3 21l5-3 4 1 9-4" opacity=".5"/></svg>vs Market</button>`:'';
+  // a tab that is mostly cash will trail the market by construction, so it says so
+  // rather than letting the gap read as bad picking
+  let cash=0;
+  if(on&&tab!=='bot'){const o=tab==='rest'?latest.rest:latest.total; cash=o.value?o.cash/o.value*100:0}
+  const sub=on?`Both lines start at zero on ${dmyhm(mv.from)}. The distance between them is the whole story.`
+    +(cash>50?` This tab is ${cash.toFixed(0)}% cash, which does not follow the market either way.`:'')
+    :subtitle;
+  const legend=on
+    ?`<div class="legend"><span><i></i>${title.toLowerCase()}</span><span><i class="mkt"></i>${MARKET} (SPY)</span><span><i class="base"></i>shared zero</span><span><i class="now"></i>latest</span></div>`
+    :`<div class="legend"><span><i></i>value</span><span><i class="base"></i>start of range</span><span><i class="now"></i>latest</span></div>`;
+  return `<div class="card chartbox"><div class="card-h"><div><h2 class="title">${title}</h2><p class="subtitle">${sub}</p></div><div class="ctrl">${tog}<div class="seg" role="group" aria-label="Range">${ranges}</div></div></div>
   <div class="readout" id="readout"><span class="l">—</span><span class="v">—</span><span class="p">—</span><span class="d"></span></div><div id="chart"></div>
-  <div class="legend"><span><i></i>value</span><span><i class="base"></i>start of range</span><span><i class="now"></i>latest</span></div></div>`;
+  ${legend}</div>`;
 }
 
 // The wall-clock time written inside an ET timestamp, e.g. "13:49" - the bot's
@@ -542,7 +619,7 @@ function render(){
     const rg={up:'rising',side:'flat',down:'falling'}[latest.regime]||'—';
     // "today" is from the first snapshot of the ET date, which may be well after the open - so the chip says when
     const today=dy&&dy.pnl!=null?`<div class="delta ${dir(dy.pnl)}"><span class="k">Today</span>${dir(dy.pnl)==='down'?ARROW_DN:ARROW}<span>${fmt$(dy.pnl)} · ${fmtP(dy.pct)}</span><small>from ${etHM(dy.basis)} ET</small></div>`:'';
-    head=hero(b.equity,`STAKE ${fmt$(b.stake)} · CASH ${fmt$(b.cash)}`,d,b.pct,`<div class="regime ${latest.regime==='up'?'up':latest.regime==='down'?'down':''}"><span class="dot"></span>Market ${rg}</div>${today}`);
+    head=hero(b.equity,`STAKE ${fmt$(b.stake)} · CASH ${fmt$(b.cash)}`,d,b.pct,`<div class="regime ${latest.regime==='up'?'up':latest.regime==='down'?'down':''}"><span class="dot"></span>Market ${rg}</div>${today}${vsChip()}`);
     const ddPct=k.drawdown_pct!=null&&k.trip_pct?Math.abs(k.drawdown_pct)/Math.abs(k.trip_pct)*100:0;
     const breaker=k.peak==null?['Breaker','armed','','Dip book · no session yet']
       :k.paused_sessions?['Breaker','PAUSED','neg',`Dip book · ${k.paused_sessions} sessions · cooldown ${k.cooldown_sessions}`,{pct:100}]
@@ -562,7 +639,7 @@ function render(){
       ${card('Closed trades','What the bot has finished with, and why it let go.',closedTrades(b),nClosed+' closed')}</div>`;
   } else if(tab==='rest'){
     const p0=(hist&&hist.meta&&hist.meta.rest0)||r.value, d=r.value-p0;
-    head=hero(r.value,`EVERYTHING THAT IS NOT THE BOT'S · SINCE ${since}`,d,p0?d/p0*100:0);
+    head=hero(r.value,`EVERYTHING THAT IS NOT THE BOT'S · SINCE ${since}`,d,p0?d/p0*100:0,vsChip());
     const ps=r.value?r.positions_value/r.value*100:0;
     const sits=card('Where it sits','Cash dominates, so this view moves only when the holdings do — or when money is added or withdrawn.',
       tiles([['Positions',fmt$(r.positions_value),'',`${r.positions.length} holding${r.positions.length===1?'':'s'}`],['Cash',fmt$(r.cash),'','not used by the bot']])+`<div style="margin-top:12px">${split([['Positions',ps,'teal'],['Cash',100-ps,'t5']])}</div>`);
@@ -578,7 +655,7 @@ function render(){
     body=`<div class="page"><div class="two">${feed}${feedSheet()}</div></div>`;
   } else {
     const p0=(hist&&hist.meta&&hist.meta.total0)||t.value, d=t.value-p0;
-    head=hero(t.value,`WHOLE ACCOUNT · CASH ${fmt$(t.cash)} · SINCE ${since}`,d,p0?d/p0*100:0);
+    head=hero(t.value,`WHOLE ACCOUNT · CASH ${fmt$(t.cash)} · SINCE ${since}`,d,p0?d/p0*100:0,vsChip());
     const bs=t.value?b.equity/t.value*100:0;
     const comp=card('Composition',`The bot is about ${bs.toFixed(0)}% of the account — which is why every tab has its own scale. On one axis the bot would be a flat line on the floor.`,
       tiles([['Bot',fmt$(b.equity),cls(b.pct),`${fmtP(b.pct)} vs stake`],['Rest',fmt$(r.value),'',`${fmt$(r.positions_value)} in positions`]])+`<div style="margin-top:12px">${split([['Bot',bs,'amber'],['Rest',100-bs,'teal']])}</div>`);
@@ -589,6 +666,7 @@ function render(){
   document.title=(tab==='news'?'News':fmt$(tab==='bot'?b.equity:tab==='rest'?r.value:t.value))+' · Dashboardia';
   drawChart(); watchChart();
   document.querySelectorAll('.seg button').forEach(bt=>bt.addEventListener('click',()=>{range=bt.dataset.r;try{localStorage.setItem('db.range',range)}catch(e){};render()}));
+  const mt=$('#mtog'); if(mt) mt.addEventListener('click',()=>{vsOn=!vsOn;try{localStorage.setItem('db.vs',vsOn?'1':'0')}catch(e){};render()});
 }
 
 document.querySelectorAll('#tabs button').forEach(bt=>bt.addEventListener('click',()=>{tab=bt.dataset.tab;try{localStorage.setItem('db.tab',tab)}catch(e){};
