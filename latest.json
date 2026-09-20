@@ -1,6 +1,6 @@
 {
- "generated_at": "2026-09-20T08:05:03-04:00",
- "generated_local": "2026-09-20T12:05:03",
+ "generated_at": "2026-09-20T08:10:03-04:00",
+ "generated_local": "2026-09-20T12:10:03",
  "env": "virtual",
  "regime": "up",
  "spy": null,
@@ -137,7 +137,7 @@
    "pnl": 0.0,
    "pct": 0.0,
    "basis": "2026-09-20T08:00:03-04:00",
-   "snapshots": 2
+   "snapshots": 3
   }
  },
  "rest": {
