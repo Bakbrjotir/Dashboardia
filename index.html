@@ -166,7 +166,8 @@ svg.plot text.endlab{font-weight:700;font-size:10.5px}
 .lock button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .lock.bad input{border-color:var(--down)}
 .lock .err{flex:1 1 100%;font:11px var(--mono);letter-spacing:.10em;text-transform:uppercase;color:var(--down);margin:0}
-.hid{font-family:var(--mono);font-size:12.5px;color:var(--t4);letter-spacing:.06em;padding:10px 0;margin:0}
+.lock.warnbar{background:var(--down-10);border-color:var(--down)}
+.lock.warnbar b{color:var(--down)}
 .relock{display:flex;justify-content:center;padding:28px 0 10px}
 .relock button{font:11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--t5);background:none;border:0;cursor:pointer;padding:8px 12px;border-radius:8px}
 .relock button:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
@@ -314,12 +315,13 @@ const JOBS=[['08:30','Morning check'],['09:31','Opening prices'],['09:44','Momen
 // beside this file on the same public host, and anyone who asks for one of them
 // by name still gets it whole. Real secrecy needs the bot to encrypt those files
 // before it uploads them; the README says what that would take.
-const PASS_SHA='1b750a85db4c8b9489b07996e43e47e3d2b26e922cab1b1da3d9ee666fbc3ede';
-let locked=true, badPass=false, pass='', encrypted=false;
+// The password is never stored here in any form. It used to be, as a hash, to
+// drive a curtain over plaintext figures - but that curtain protected nothing
+// (the files were public either way) while the hash was a crackable copy of the
+// very password that now protects the ciphertext. The ciphertext is the only
+// gate, and the only check: AES-GCM's tag says whether the password was right.
+let locked=false, badPass=false, pass='', encrypted=false;
 try{pass=localStorage.getItem('db.pw')||''}catch(e){}
-try{locked=localStorage.getItem('db.key')!==PASS_SHA}catch(e){}
-const sha256=async s=>{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
-  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')};
 
 // ---- decryption ----------------------------------------------------------
 // Once the bot encrypts what it uploads, the files on the host are ciphertext and
@@ -343,33 +345,15 @@ async function open_(doc,pw){
   const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(doc.iv)},k,b64(doc.ct));
   return JSON.parse(new TextDecoder().decode(pt));
 }
-const fnv=s=>{let h=0x811c9dc5;for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),0x01000193)>>>0;return h};
-// deterministic, so a figure garbles the same way on every render and the page
-// does not flicker through fresh nonsense every sixty seconds
-const garble=s=>{let h=fnv(s);return s.replace(/\d/g,()=>{h=Math.imul(h^0x2545f491,0x01000193)>>>0;return String(h%10)})};
-// Controls, field labels, the benchmark's own name and the time axis keep their
-// digits: scrambling those breaks the furniture without hiding anything worth
-// hiding. Only figures are scrambled.
-const NOG='.seg,.mtog,.k,small,.xlab,.l';
-function curtain(root){
-  const skip=new Set(root.querySelectorAll?root.querySelectorAll(NOG):[]);
-  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT), hits=[];
-  let n; while(n=w.nextNode()){
-    if(!/\d/.test(n.nodeValue)) continue;
-    let p=n.parentNode, ok=true;
-    while(p&&p!==root){ if(skip.has(p)){ok=false;break} p=p.parentNode }
-    if(ok) hits.push(n);
-  }
-  hits.forEach(t=>{t.nodeValue=garble(t.nodeValue)});
-}
-// lists carry names and headlines, which no amount of digit-scrambling hides
-const hidden=what=>`<p class="hid">${what} — hidden until unlocked.</p>`;
-const lockBar=()=>locked?`<div class="lock${badPass?' bad':''}"><div class="t"><b>${encrypted?'Encrypted':'Private dashboard'}</b>
-  <p>${encrypted
-    ?'The data for this page is encrypted. Without the password there is nothing here to read — not on the screen, and not in the files behind it.'
-    :'Every figure below is scrambled. Enter the password to see the real ones. Until the bot encrypts what it uploads, this hides the page but not the files behind it.'}</p></div>
+const lockBar=()=>locked?`<div class="lock${badPass?' bad':''}"><div class="t"><b>Encrypted</b>
+  <p>The data for this page is encrypted. Without the password there is nothing here to read — not on the screen, and not in the files behind it.</p></div>
   <form id="unlock"><input id="pw" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password"><button type="submit">Unlock</button></form>
   ${badPass?'<p class="err">That is not the password.</p>':''}</div>`:'';
+// If the files ever come back as plaintext the page says so loudly instead of
+// drawing a curtain: at that point the figures are public in the files, and a
+// lock on the screen would only disguise a broken bot.
+const warnBar=()=>(!encrypted&&latest)?`<div class="lock warnbar"><div class="t"><b>Not encrypted</b>
+  <p>These files are being published in the clear — anyone with the link can read them. The bot has stopped encrypting what it uploads.</p></div></div>`:'';
 
 let latest=null, hist=null, news=null, tab='bot', range='ALL', vsOn=false;
 try{tab=localStorage.getItem('db.tab')||tab;range=localStorage.getItem('db.range')||range;vsOn=localStorage.getItem('db.vs')==='1'}catch(e){}
@@ -400,8 +384,7 @@ async function load(){
     // both together: decrypting takes real time, and a tab click landing between
     // the two assignments would draw a hero with no curve under it
     const [L,H]=await Promise.all([open_(ra,pass),open_(rb,pass)]);
-    latest=L; hist=H;
-    if(encrypted) locked=false;           // holding the key IS the unlock
+    latest=L; hist=H; locked=false;       // holding the key IS the unlock
   }catch(e){                               // a wrong password fails the GCM tag
     latest=hist=news=null; locked=true; pass=''; try{localStorage.removeItem('db.pw')}catch(_){}
     return render();
@@ -539,10 +522,7 @@ function chart(pts,W,onPoint,mv){
   return svg;
 }
 
-// the scrub rewrites the readout on every pointer move, so the curtain is
-// re-applied here rather than once at render
-function readout(p){ readoutRaw(p); if(locked){const r=$('#readout'); if(r) curtain(r)} }
-function readoutRaw(p){
+function readout(p){
   const ro=$('#readout'); if(!ro||!latest) return;
   const pts=series(), mv=vsOn?marketView(pts):null;
   if(mv){ // against the benchmark the readout carries both curves and the gap
@@ -567,9 +547,7 @@ function drawChart(){
   const box=$('#chart'); if(!box) return;
   chartW=Math.max(260,Math.round(box.clientWidth));
   const pts=series(), mv=vsOn?marketView(pts):null;
-  box.replaceChildren(chart(pts,chartW,readout,mv));
-  if(locked) curtain(box); // the axis labels carry real figures too
-  readout(null);
+  box.replaceChildren(chart(pts,chartW,readout,mv)); readout(null);
 }
 function watchChart(){
   const box=$('#chart'); if(!box) return;
@@ -770,8 +748,8 @@ function render(){
     const nClosed=(b.closed_stats&&b.closed_stats.trades)||0;
     body=`<div class="page">${chartCard('Bot equity',`What the bot's money is worth, against the ${fmt$(b.stake)} stake.`)}
       <div class="two">${books}${daySheet()}</div>
-      ${card('Open positions','Live marks from eToro.',locked?hidden('Positions'):botPositions(b.positions),b.positions.length+' open')}
-      ${card('Closed trades','What the bot has finished with, and why it let go.',locked?hidden('Trades'):closedTrades(b),nClosed+' closed')}</div>`;
+      ${card('Open positions','Live marks from eToro.',botPositions(b.positions),b.positions.length+' open')}
+      ${card('Closed trades','What the bot has finished with, and why it let go.',closedTrades(b),nClosed+' closed')}</div>`;
   } else if(tab==='rest'){
     const p0=(hist&&hist.meta&&hist.meta.rest0)||r.value, d=r.value-p0;
     head=hero(r.value,`EVERYTHING THAT IS NOT THE BOT'S · SINCE ${since}`,d,p0?d/p0*100:0,vsChip(),'since '+since);
@@ -780,13 +758,12 @@ function render(){
       tiles([['Positions',fmt$(r.positions_value),'',`${r.positions.length} holding${r.positions.length===1?'':'s'}`],['Cash',fmt$(r.cash),'','not used by the bot']])+`<div style="margin-top:12px">${split([['Positions',ps,'teal'],['Cash',100-ps,'t5']])}</div>`);
     body=`<div class="page">${chartCard('Rest of portfolio','Measured from the first snapshot, not from a purchase price.')}
       <div class="two">${sits}${baseSheet(r.value,p0,'Measured from the first snapshot, not from a purchase price. A deposit or withdrawal shows up as a step, because this tab charts an account, not a return.')}</div>
-      ${card('Holdings','Positions the bot does not manage.',locked?hidden('Holdings'):restHoldings(r),r.positions.length+' held')}</div>`;
+      ${card('Holdings','Positions the bot does not manage.',restHoldings(r),r.positions.length+' held')}</div>`;
   } else if(tab==='news'){
     const items=newsItems(), names=new Set(items.map(i=>i.symbol));
     head=`<div class="hero"><div><div class="val word">Headlines</div><div class="sub">FOR THE NAMES THE BOT HOLDS · GATHERED BY THE BOT, NOT BY THIS PAGE</div></div>
       <div class="chips"><div class="regime">${items.length} headline${items.length===1?'':'s'} · ${names.size} name${names.size===1?'':'s'}</div></div></div>`;
-    const feed=locked?card('By position','Newest first. Each headline links to its source.',hidden('Headlines'))
-      :news?card('By position','Newest first. Each headline links to its source.',newsFeed(),(news.generated_at?etHM(news.generated_at)+' ET':''))
+    const feed=news?card('By position','Newest first. Each headline links to its source.',newsFeed(),(news.generated_at?etHM(news.generated_at)+' ET':''))
       :card('No feed yet','Headlines appear here once the bot starts publishing them.','<p class="note">When it does, each name the bot holds gets its own group — the headline next to the position it moves, with the source, the time, and a link out.</p>');
     body=`<div class="page"><div class="two">${feed}${feedSheet()}</div></div>`;
   } else {
@@ -798,9 +775,8 @@ function render(){
     body=`<div class="page">${chartCard('Whole account','Bot and rest together, measured from the first snapshot.')}
       <div class="two">${comp}${baseSheet(t.value,p0,'Bot and rest together. The bot\'s own gain is measured against its stake on the BOT tab; here everything is measured from the first snapshot.')}</div></div>`;
   }
-  $('#view').innerHTML=lockBar()+head+body+(locked?'':'<div class="relock"><button id="relock" type="button">Lock this dashboard</button></div>');
-  if(locked) curtain($('#view'));
-  document.title=locked?'Dashboardia':(tab==='news'?'News':fmt$(tab==='bot'?b.equity:tab==='rest'?r.value:t.value))+' · Dashboardia';
+  $('#view').innerHTML=warnBar()+head+body+(encrypted?'<div class="relock"><button id="relock" type="button">Lock this dashboard</button></div>':'');
+  document.title=(tab==='news'?'News':fmt$(tab==='bot'?b.equity:tab==='rest'?r.value:t.value))+' · Dashboardia';
   drawChart(); watchChart();
   document.querySelectorAll('.seg button').forEach(bt=>bt.addEventListener('click',()=>{range=bt.dataset.r;try{localStorage.setItem('db.range',range)}catch(e){};render()}));
   const mt=$('#mtog'); if(mt) mt.addEventListener('click',()=>{vsOn=!vsOn;try{localStorage.setItem('db.vs',vsOn?'1':'0')}catch(e){};render()});
@@ -811,24 +787,16 @@ function wireLock(){
   const uf=$('#unlock');
   if(uf) uf.addEventListener('submit',async ev=>{
     ev.preventDefault();
-    const v=$('#pw').value||'';
-    if(encrypted||!latest){          // the ciphertext is the authority
-      pass=v; try{localStorage.setItem('db.pw',v)}catch(e){}
-      await load();
-      if(latest){locked=false;scrollTo({top:0})}
-      else {badPass=true;render();badPass=false;const p=$('#pw'); if(p) p.focus()}
-      return;
-    }
-    let h=''; try{h=await sha256(v)}catch(e){}
-    if(h===PASS_SHA){locked=false;badPass=false;pass=v;
-      try{localStorage.setItem('db.key',h);localStorage.setItem('db.pw',v)}catch(e){};render();scrollTo({top:0})}
+    pass=$('#pw').value||'';         // the ciphertext is the authority
+    try{localStorage.setItem('db.pw',pass)}catch(e){}
+    await load();
+    if(latest) scrollTo({top:0});
     else {badPass=true;render();badPass=false;const p=$('#pw'); if(p) p.focus()}
   });
   const rl=$('#relock');
   if(rl) rl.addEventListener('click',()=>{
-    locked=true; pass='';
-    try{localStorage.removeItem('db.key');localStorage.removeItem('db.pw')}catch(e){}
-    if(encrypted){latest=hist=news=null}
+    locked=true; pass=''; latest=hist=news=null;
+    try{localStorage.removeItem('db.pw')}catch(e){}
     render(); scrollTo({top:0});
   });
 }
