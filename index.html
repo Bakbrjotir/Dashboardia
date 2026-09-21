@@ -375,18 +375,26 @@ let latest=null, hist=null, news=null, tab='bot', range='ALL', vsOn=false;
 try{tab=localStorage.getItem('db.tab')||tab;range=localStorage.getItem('db.range')||range;vsOn=localStorage.getItem('db.vs')==='1'}catch(e){}
 
 async function load(){
-  const q='?ts='+Date.now(); let ra,rb;
+  // all three at once: the lock decision has to see news.json too. Two
+  // independent processes publish these, so a failed snapshot upload beside a
+  // successful news upload can convert news first - and an empty news tab
+  // instead of a password prompt would just look broken.
+  const q='?ts='+Date.now(); let ra,rb,rc=null,newsCode=0;
   try{
-    const [a,b]=await Promise.all([fetch('latest.json'+q,{cache:'no-store'}),fetch('history.json'+q,{cache:'no-store'})]);
+    const [a,b,c]=await Promise.all([
+      fetch('latest.json'+q,{cache:'no-store'}),
+      fetch('history.json'+q,{cache:'no-store'}),
+      fetch('news.json'+q,{cache:'no-store'}).catch(()=>null)]);
     if(!a.ok||!b.ok) throw new Error('HTTP '+a.status+'/'+b.status);
     ra=await a.json(); rb=await b.json();
+    if(c){newsCode=c.status; if(c.ok){try{rc=await c.json()}catch(e){rc=null}}}
     $('#err').style.display='none';
   }catch(e){
     $('#err').textContent='Could not load data: '+e.message+(latest?' — showing the last good copy.':'');
     $('#err').style.display='block';
     return latest?render():undefined;
   }
-  encrypted=isEnc(ra)||isEnc(rb);
+  encrypted=isEnc(ra)||isEnc(rb)||isEnc(rc);
   if(encrypted&&!pass){latest=hist=news=null;locked=true;return render()}
   try{
     // both together: decrypting takes real time, and a tab click landing between
@@ -398,9 +406,10 @@ async function load(){
     latest=hist=news=null; locked=true; pass=''; try{localStorage.removeItem('db.pw')}catch(_){}
     return render();
   }
-  // news.json is optional: absent until the bot publishes it, and never fatal
-  try{const c=await fetch('news.json'+q,{cache:'no-store'});
-    if(c.ok) news=await open_(await c.json(),pass); else if(c.status===404) news=null}catch(e){}
+  // news is optional and never fatal; a transient failure keeps the last copy
+  // rather than blanking the tab, but a clean 404 means it is genuinely gone
+  if(rc){try{news=await open_(rc,pass)}catch(e){}}
+  else if(newsCode===404) news=null;
   render();
 }
 
