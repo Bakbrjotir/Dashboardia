@@ -346,14 +346,14 @@ async function open_(doc,pw){
   return JSON.parse(new TextDecoder().decode(pt));
 }
 const lockBar=()=>locked?`<div class="lock${badPass?' bad':''}"><div class="t"><b>Encrypted</b>
-  <p>The data for this page is encrypted. Without the password there is nothing here to read — not on the screen, and not in the files behind it.</p></div>
+  <p>Nothing here reads without the password.</p></div>
   <form id="unlock"><input id="pw" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password"><button type="submit">Unlock</button></form>
   ${badPass?'<p class="err">That is not the password.</p>':''}</div>`:'';
 // If the files ever come back as plaintext the page says so loudly instead of
 // drawing a curtain: at that point the figures are public in the files, and a
 // lock on the screen would only disguise a broken bot.
 const warnBar=()=>(!encrypted&&latest)?`<div class="lock warnbar"><div class="t"><b>Not encrypted</b>
-  <p>These files are being published in the clear — anyone with the link can read them. The bot has stopped encrypting what it uploads.</p></div></div>`:'';
+  <p>The bot is publishing these files in the clear. Anyone with the link can read them.</p></div></div>`:'';
 
 let latest=null, hist=null, news=null, tab='bot', range='ALL', vsOn=false;
 try{tab=localStorage.getItem('db.tab')||tab;range=localStorage.getItem('db.range')||range;vsOn=localStorage.getItem('db.vs')==='1'}catch(e){}
@@ -431,7 +431,7 @@ function series(){
 // the market data cannot flatter either side, and the distance between the two
 // lines is a true like-for-like figure. Returns null until the bot ships `spy`,
 // which is what keeps the toggle and the chip hidden rather than broken.
-const MARKET='S&P 500';
+const MARKET='Market'; // the S&P 500 via SPY - named plainly on the page, precisely in the README
 function marketView(pts){
   const i=pts.findIndex(p=>p.m!=null&&p.v!=null&&p.m>0&&p.v>0);
   if(i<0) return null;
@@ -570,13 +570,10 @@ function chartCard(title,subtitle){
   const tog=mv?`<button class="mtog" id="mtog" aria-pressed="${vsOn?'true':'false'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16l5-5 4 3 9-9"/><path d="M3 21l5-3 4 1 9-4" opacity=".5"/></svg>vs Market</button>`:'';
   // a tab that is mostly cash will trail the market by construction, so it says so
   // rather than letting the gap read as bad picking
-  let cash=0;
-  if(on&&tab!=='bot'){const o=tab==='rest'?latest.rest:latest.total; cash=o.value?o.cash/o.value*100:0}
-  const sub=on?`Both lines start at zero on <span class="l">${dmyhm(mv.from)}</span>. The distance between them is the whole story.`
-    +(cash>50?` This tab is ${cash.toFixed(0)}% cash, which does not follow the market either way.`:'')
-    :subtitle;
+  // one line, and it states the one thing that matters: each curve against itself
+  const sub=on?`Each from its own zero at ${dmyhm(mv.from)}.`:subtitle;
   const legend=on
-    ?`<div class="legend"><span><i></i>${title.toLowerCase()}</span><span><i class="mkt"></i>${MARKET} (SPY)</span><span><i class="base"></i>shared zero</span><span><i class="now"></i>latest</span></div>`
+    ?`<div class="legend"><span><i></i>${title.toLowerCase()}</span><span><i class="mkt"></i>${MARKET.toLowerCase()}</span><span><i class="base"></i>zero</span><span><i class="now"></i>latest</span></div>`
     :`<div class="legend"><span><i></i>value</span><span><i class="base"></i>start of range</span><span><i class="now"></i>latest</span></div>`;
   return `<div class="card chartbox"><div class="card-h"><div><h2 class="title">${title}</h2><p class="subtitle">${sub}</p></div><div class="ctrl">${tog}<div class="seg" role="group" aria-label="Range">${ranges}</div></div></div>
   <div class="readout" id="readout"><span class="l">—</span><span class="v">—</span><span class="p">—</span><span class="d"></span></div><div id="chart"></div>
@@ -604,7 +601,7 @@ function daySheet(){
   const ev=JOBS.map(([t,n],i)=>{const m=parseInt(t.slice(0,2))*60+parseInt(t.slice(3)); const k=m<hm?'done':i===nextIdx?'next':''; return `<span class="${k} t">${t}</span><span class="${k}">${n}</span>`}).join('');
   const clock=String(now.getUTCHours()).padStart(2,'0')+':'+String(now.getUTCMinutes()).padStart(2,'0');
   const today=dy&&dy.pnl!=null?`<dt>Today</dt><dd class="${cls(dy.pnl)}">${fmt$(dy.pnl)} · ${fmtP(dy.pct)}</dd>`:'';
-  const basis=dy&&dy.basis?`Today runs from the first snapshot of the day, ${etHM(dy.basis)} ET (${dy.snapshots} so far), not from the open.`:'';
+  const basis=dy&&dy.basis?`Today counts from ${etHM(dy.basis)} ET, the day's first snapshot, not the open.`:'';
   return `<div class="sheet"><div class="h"><span>Day sheet</span><span>${new Date(latest.generated_at).toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'}).toUpperCase()}</span></div>
   <dl><dt>Market</dt><dd>${rg}</dd>${today}<dt>Dip book</dt><dd>${bk.B.open}/${bk.B.slots} slots · ${latest.regime==='up'?'may buy':'stands down'}</dd><dt>Momentum</dt><dd>${bk.C.open}/${bk.C.slots} slots · ${latest.regime==='down'?'holds cash':bk.C.open>=bk.C.slots?'full':'may buy'}</dd>
   <dt>Breaker</dt><dd>${breakerText(b.breaker)}</dd></dl>
@@ -633,7 +630,7 @@ function closedTrades(b){
     <div class="b"><span class="num">${p.entry.toFixed(2)} → ${p.exit.toFixed(2)}</span><span class="num ${cls(p.pct)}">${fmtP(p.pct)}</span></div>
     <div class="f"><span>${dmy(p.opened)} → ${dmy(p.closed)} · ${p.sessions_held} days</span></div><div class="why">${p.reason_text||p.reason||''}</div></div>`).join('');
   return `${stats}<div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Position</th><th>Opened → closed</th><th>Entry → exit</th><th>Chg</th><th>P&amp;L</th><th>Days</th><th>Exit</th></tr></thead><tbody>${tr}</tbody></table></div><div class="rows" style="margin-top:6px">${rows}</div>
-  <p class="note">Chg is net of both $1 commissions over the money committed, so it is always a little worse than the price move - it answers what the trade did to the account. Days are trading days.</p>${cancelled}`;
+  <p class="note">Chg is net of both $1 commissions, so it runs a little under the price move. Days are trading days.</p>${cancelled}`;
 }
 // What the Rest and Total deltas are measured from.
 function baseSheet(value,p0,foot){
@@ -656,7 +653,7 @@ function botPositions(ps){
     <div class="bar ${p.book==='B'?'dip':'mom'}" aria-hidden="true"><i style="width:${p.sessions_held/p.time_stop*100}%"></i></div>
     <div class="f"><span class="${left<=2?'warn':''}">Day ${p.sessions_held} of ${p.time_stop}</span><span class="${near?'warn':''}">${p.stop_distance_pct==null?'No price stop':p.stop_distance_pct.toFixed(1)+'% above stop'}</span></div></div>`}).join('');
   return `<div class="tablewrap"><table><thead><tr><th>Position</th><th>Entry</th><th>Now</th><th>Chg</th><th>P&amp;L</th><th>Days</th><th>To stop</th></tr></thead><tbody>${tr}</tbody></table></div><div class="rows">${rows}</div>
-  <p class="note">Days counts trading days against each book's limit — Dip 12, Momentum 10. "To stop" is the distance above the Momentum book's 5% stop; the Dip book has no price stop by design.</p>`;
+  <p class="note">Days are trading days against the book's limit (Dip 12, Momentum 10). To stop is the distance above the 5% stop; the Dip book has none.</p>`;
 }
 function restHoldings(r){
   const tag=p=>p.legacy?'<span class="pill dim">pre-bot</span>':'';
@@ -702,7 +699,7 @@ function newsFeed(){
 }
 function feedSheet(){
   if(!news) return `<div class="sheet"><div class="h"><span>Feed</span><span>—</span></div><dl><dt>Status</dt><dd>not published</dd><dt>File</dt><dd>news.json</dd></dl>
-    <div class="line"></div><div class="foot">The bot gathers headlines when it snapshots and uploads them beside latest.json. This page never fetches news itself, so there is nothing to show until it does.</div></div>`;
+    <div class="line"></div><div class="foot">Nothing to show until the bot publishes headlines.</div></div>`;
   const items=newsItems(), names=new Set(items.map(i=>i.symbol)), src={};
   items.forEach(i=>{const s=i.source||host(i.url)||'unknown'; src[s]=(src[s]||0)+1});
   const top=Object.entries(src).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([s,n])=>`<dt>${esc(s)}</dt><dd>${n}</dd>`).join('');
@@ -711,7 +708,7 @@ function feedSheet(){
   return `<div class="sheet"><div class="h"><span>Feed</span><span>${etDMY(news.generated_at)}</span></div>
   <dl><dt>Gathered</dt><dd>${etHM(news.generated_at)||'—'} ET${age?' · '+age:''}</dd><dt>Headlines</dt><dd>${items.length}</dd><dt>Names</dt><dd>${names.size}</dd></dl>
   ${top?`<div class="line"></div><dl>${top}</dl>`:''}
-  <div class="line"></div><div class="foot">Gathered by the bot when it snapshots; the page never fetches news itself. Headlines are the sources' own words, not eToro's marks, and nothing here is a signal the bot trades on.</div></div>`;
+  <div class="line"></div><div class="foot">Gathered by the bot. Headlines are the sources' own words; nothing here is a trading signal.</div></div>`;
 }
 
 // Every tab has the same shape: hero, chart, [tiles | sheet], then a list if it has one.
@@ -754,26 +751,26 @@ function render(){
     const p0=(hist&&hist.meta&&hist.meta.rest0)||r.value, d=r.value-p0;
     head=hero(r.value,`EVERYTHING THAT IS NOT THE BOT'S · SINCE ${since}`,d,p0?d/p0*100:0,vsChip(),'since '+since);
     const ps=r.value?r.positions_value/r.value*100:0;
-    const sits=card('Where it sits','Cash dominates, so this view moves only when the holdings do — or when money is added or withdrawn.',
+    const sits=card('Where it sits','Cash dominates; this moves only when the holdings do, or money comes in or out.',
       tiles([['Positions',fmt$(r.positions_value),'',`${r.positions.length} holding${r.positions.length===1?'':'s'}`],['Cash',fmt$(r.cash),'','not used by the bot']])+`<div style="margin-top:12px">${split([['Positions',ps,'teal'],['Cash',100-ps,'t5']])}</div>`);
     body=`<div class="page">${chartCard('Rest of portfolio','Measured from the first snapshot, not from a purchase price.')}
-      <div class="two">${sits}${baseSheet(r.value,p0,'Measured from the first snapshot, not from a purchase price. A deposit or withdrawal shows up as a step, because this tab charts an account, not a return.')}</div>
+      <div class="two">${sits}${baseSheet(r.value,p0,'From the first snapshot, not a purchase price. A deposit or withdrawal shows as a step.')}</div>
       ${card('Holdings','Positions the bot does not manage.',restHoldings(r),r.positions.length+' held')}</div>`;
   } else if(tab==='news'){
     const items=newsItems(), names=new Set(items.map(i=>i.symbol));
-    head=`<div class="hero"><div><div class="val word">Headlines</div><div class="sub">FOR THE NAMES THE BOT HOLDS · GATHERED BY THE BOT, NOT BY THIS PAGE</div></div>
+    head=`<div class="hero"><div><div class="val word">Headlines</div><div class="sub">FOR THE NAMES THE BOT HOLDS</div></div>
       <div class="chips"><div class="regime">${items.length} headline${items.length===1?'':'s'} · ${names.size} name${names.size===1?'':'s'}</div></div></div>`;
     const feed=news?card('By position','Newest first. Each headline links to its source.',newsFeed(),(news.generated_at?etHM(news.generated_at)+' ET':''))
-      :card('No feed yet','Headlines appear here once the bot starts publishing them.','<p class="note">When it does, each name the bot holds gets its own group — the headline next to the position it moves, with the source, the time, and a link out.</p>');
+      :card('No feed yet','Headlines appear here once the bot publishes them.','');
     body=`<div class="page"><div class="two">${feed}${feedSheet()}</div></div>`;
   } else {
     const p0=(hist&&hist.meta&&hist.meta.total0)||t.value, d=t.value-p0;
     head=hero(t.value,`WHOLE ACCOUNT · CASH ${fmt$(t.cash)} · SINCE ${since}`,d,p0?d/p0*100:0,vsChip(),'since '+since);
     const bs=t.value?b.equity/t.value*100:0;
-    const comp=card('Composition',`The bot is about ${bs.toFixed(0)}% of the account — which is why every tab has its own scale. On one axis the bot would be a flat line on the floor.`,
+    const comp=card('Composition',`The bot is about ${bs.toFixed(0)}% of the account, which is why every tab has its own scale.`,
       tiles([['Bot',fmt$(b.equity),cls(b.pct),`${fmtP(b.pct)} vs stake`],['Rest',fmt$(r.value),'',`${fmt$(r.positions_value)} in positions`]])+`<div style="margin-top:12px">${split([['Bot',bs,'amber'],['Rest',100-bs,'teal']])}</div>`);
     body=`<div class="page">${chartCard('Whole account','Bot and rest together, measured from the first snapshot.')}
-      <div class="two">${comp}${baseSheet(t.value,p0,'Bot and rest together. The bot\'s own gain is measured against its stake on the BOT tab; here everything is measured from the first snapshot.')}</div></div>`;
+      <div class="two">${comp}${baseSheet(t.value,p0,'Bot and rest together, from the first snapshot. The bot\'s gain against its stake is on the BOT tab.')}</div></div>`;
   }
   $('#view').innerHTML=warnBar()+head+body+(encrypted?'<div class="relock"><button id="relock" type="button">Lock this dashboard</button></div>':'');
   document.title=(tab==='news'?'News':fmt$(tab==='bot'?b.equity:tab==='rest'?r.value:t.value))+' · Dashboardia';
