@@ -613,6 +613,14 @@ function daySheet(){
 // out and reports them as closed_stats.cancelled_orders.
 function closedTrades(b){
   const cl=b.closed||[], st=b.closed_stats||{}, n=st.trades||0;
+  // Totals rather than averages. An average win of $16.88 beside an average
+  // loss of $28.55 reads as a losing bot even while five winners outweigh two
+  // losers - the averages hide how many landed on each side. Summed from the
+  // trades themselves, so Total won + Total lost is exactly Net P&L; deriving
+  // them from the rounded averages instead would miss it by a cent.
+  const full=cl.length===n;
+  const totWin=full?cl.reduce((s,t)=>s+(t.pnl>0?t.pnl:0),0):(st.avg_win||0)*(st.wins||0);
+  const totLoss=full?cl.reduce((s,t)=>s+(t.pnl<0?t.pnl:0),0):(st.avg_loss||0)*(st.losses||0);
   const cancelled=st.cancelled_orders?`<p class="note">${st.cancelled_orders} order${st.cancelled_orders===1?' was':'s were'} placed but never filled and ${st.cancelled_orders===1?'was':'were'} cancelled - not a trade, not counted.</p>`:'';
   if(!n) return `<p class="note">No trades closed yet. Realised P&amp;L stays at ${fmt$(0)} until one does.</p>${cancelled}`;
   const book=p=>`<span class="pill ${p.book==='B'?'dip':'mom'}">${p.book==='B'?'Dip':'Mom'}</span>`;
@@ -620,8 +628,8 @@ function closedTrades(b){
   const stats=tiles([
     ['Win rate',st.win_rate==null?'—':st.win_rate.toFixed(0)+'%','',won,{pct:st.win_rate||0}],
     ['Net P&amp;L',st.net_pnl==null?'—':fmt$(st.net_pnl),cls(st.net_pnl||0),`${n} trade${n===1?'':'s'}, after commission`],
-    ['Average win',st.avg_win==null?'—':fmt$(st.avg_win),st.avg_win==null?'':'pos',st.wins?`over ${st.wins} winner${st.wins===1?'':'s'}`:'no winners yet'],
-    ['Average loss',st.avg_loss==null?'—':fmt$(st.avg_loss),st.avg_loss==null?'':'neg',st.losses?`over ${st.losses} loser${st.losses===1?'':'s'}`:'no losers yet'],
+    ['Total won',st.wins?fmt$(totWin):'—',st.wins?'pos':'',st.wins?`from ${st.wins} winner${st.wins===1?'':'s'}`:'no winners yet'],
+    ['Total lost',st.losses?fmt$(totLoss):'—',st.losses?'neg':'',st.losses?`from ${st.losses} loser${st.losses===1?'':'s'}`:'no losers yet'],
     ['Average hold',st.avg_hold_sessions==null?'—':st.avg_hold_sessions.toFixed(1)+' days','','trading days'],
     ['Best · worst',`${st.best||'—'} · ${st.worst||'—'}`,'','by P&amp;L']
   ]);
