@@ -400,18 +400,24 @@ function etNow(){ // wall clock in New York from the snapshot's offset
   const m=/([+-]\d\d):(\d\d)$/.exec(latest.generated_at); const off=m?(parseInt(m[1])*60+Math.sign(parseInt(m[1]))*parseInt(m[2])):-240;
   return new Date(Date.now()+off*60000);
 }
-// The snapshot task runs 06:00-18:00 New York. Outside that window the data is
+// The snapshot task runs 08:00-18:00 New York - 12:00-22:00 UTC, every 5 min,
+// read off the scheduler rather than assumed. Outside that window the data is
 // meant to stop, so overnight staleness is shown as a pause, not a fault.
-const WINDOW=[6*60,18*60];
+const WINDOW=[8*60,18*60], GRACE=10;
 function stamp(){
   const t=new Date(latest.generated_at); const mins=Math.round((Date.now()-t)/60000);
   const hm=t.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}), day=t.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
   const ny=etNow(), nyMin=ny.getUTCHours()*60+ny.getUTCMinutes();
   const off=nyMin<WINDOW[0]||nyMin>=WINDOW[1];
-  // inside the window, staleness only counts from the moment the window opened
-  const stale=Math.max(0,Math.min(mins,nyMin-WINDOW[0]));
-  const age=off?'paused<span class="till"> until 06:00 ET</span>':stale<1?'just now':stale<60?stale+' min ago':Math.round(stale/60)+' h ago';
-  const dot=off?'off':stale>120?'bad':stale>20?'warn':'';
+  // For the first few minutes of the window the bot is only waking up, so last
+  // night's snapshot is not yet a fault. After that the true age shows. The
+  // task runs every five minutes, so anything older means it is failing - and
+  // counting from the window opening instead would hide exactly that, which is
+  // the one moment this line exists to report.
+  const since=nyMin-WINDOW[0];
+  const stale=off?0:(since<=GRACE?Math.min(mins,since):mins);
+  const age=off?'paused<span class="till"> until 08:00 ET</span>':stale<1?'just now':stale<60?stale+' min ago':Math.round(stale/60)+' h ago';
+  const dot=off?'off':stale>30?'bad':stale>12?'warn':'';
   $('#stamp').innerHTML='<span class="dot '+dot+'"></span><span class="lbl">UPDATED </span><b>'+hm+'<span class="day"> '+day+'</span></b> · '+age;
   const e=$('#envb'); if(latest.env){e.textContent=latest.env; e.className='envb'+(latest.env==='virtual'?'':' live'); e.hidden=false} else e.hidden=true;
 }
