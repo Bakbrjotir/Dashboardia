@@ -60,7 +60,11 @@ button{font-family:inherit;touch-action:manipulation}
 .mark::after{content:"";position:absolute;left:8px;top:7px;width:4px;height:12px;background:var(--on-amber);border-radius:1px;box-shadow:6px 0 0 var(--on-amber)}
 .brand h1{font-size:20px;font-weight:700;letter-spacing:-.012em;margin:0;white-space:nowrap}
 .envb{font:700 9.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--t3);background:var(--tint3);padding:4px 7px;border-radius:999px;flex:none}
-.envb.live{color:var(--amber);background:var(--amber-10)}
+/* Real money is filled, not tinted. Amber is this page's everyday accent - the
+   live marker, the active range, the next job - so a tinted amber pill reads as
+   one more thing that is merely on. The only filled chip in the header says the
+   dollars are real. */
+.envb.live{color:var(--on-amber);background:var(--amber)}
 .stamp{font-family:var(--mono);font-size:12px;color:var(--t3);display:flex;align-items:center;gap:8px;white-space:nowrap;flex:none}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--up);flex:none}
 .dot.warn{background:var(--amber)} .dot.bad{background:var(--down)} .dot.off{background:var(--t5)}
@@ -781,7 +785,7 @@ function render(){
     const p0=(hist&&hist.meta&&hist.meta.total0)||t.value, d=t.value-p0;
     head=hero(t.value,`WHOLE ACCOUNT · CASH ${fmt$(t.cash)} · SINCE ${since}`,d,p0?d/p0*100:0,vsChip(),'since '+since);
     const bs=t.value?b.equity/t.value*100:0;
-    const comp=card('Composition',`The bot is about ${bs.toFixed(0)}% of the account, which is why every tab has its own scale.`,
+    const comp=card('Composition',`The bot is about ${bs.toFixed(0)}% of the account. Each tab keeps its own scale and its own zero.`,
       tiles([['Bot',fmt$(b.equity),cls(b.pct),`${fmtP(b.pct)} vs stake`],['Rest',fmt$(r.value),'',`${fmt$(r.positions_value)} in positions`]])+`<div style="margin-top:12px">${split([['Bot',bs,'amber'],['Rest',100-bs,'teal']])}</div>`);
     body=`<div class="page">${chartCard('Whole account','Bot and rest together, measured from the first snapshot.')}
       <div class="two">${comp}${baseSheet(t.value,p0,'Bot and rest together, from the first snapshot. The bot\'s gain against its stake is on the BOT tab.')}</div></div>`;
